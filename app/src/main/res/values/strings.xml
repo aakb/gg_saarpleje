@@ -1,10 +1,9 @@
 <resources>
-    <string name="app_name">Hello ITK</string>
-    <string name="title_activity_main">Hello ITK</string>
-    <string name="hello_world">Hello ITK!</string>
+    <string name="app_name">Contextual voice commands</string>
     <string name="start_program">start program</string>
+    <string name="voice_command_test">Say "Okay, Glass"</string>
+    <string name="finish">finish report</string>
     <string name="take_before_image">take before image</string>
-    <string name="take_video">take video</string>
     <string name="take_after_image">take after image</string>
-    <string name="close_program">close program</string>
+    <string name="take_video">take video</string>
 </resources>

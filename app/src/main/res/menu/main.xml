@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Use the constants defined in the ContextualMenus.Command enum-->
+    <item
+        android:id="@+id/take_before_image_menu_item"
+        android:title="@string/take_before_image" />
+    <item
+        android:id="@+id/take_video_menu_item"
+        android:title="@string/take_video" />
+    <item
+        android:id="@+id/take_after_image_menu_item"
+        android:title="@string/take_after_image" />
+    <item
+        android:id="@+id/finish_menu_item"
+        android:title="@string/finish" />
+</menu>
