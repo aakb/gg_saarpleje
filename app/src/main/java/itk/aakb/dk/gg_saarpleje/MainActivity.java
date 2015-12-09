@@ -94,10 +94,13 @@ public class MainActivity extends Activity {
      * Builds a Glass styled "Hello World!" view using the {@link CardBuilder} class.
      */
     private View buildView() {
-        CardBuilder card = new CardBuilder(this, CardBuilder.Layout.TEXT);
+/*        CardBuilder card = new CardBuilder(this, CardBuilder.Layout.TEXT);
 
         card.setText(R.string.hello_world);
-        return card.getView();
+        return card.getView();*/
+        return new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+                .setEmbeddedLayout(R.layout.test)
+                .getView();
     }
 
 }
