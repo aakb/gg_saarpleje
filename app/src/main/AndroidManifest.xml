@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="itk.aakb.dk.glasstest">
+    package="itk.aakb.dk.gg_saarpleje">
 
     <application
         android:allowBackup="true"
@@ -9,7 +9,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="itk.aakb.dk.gg_saarpleje.MainActivity"
             android:icon="@drawable/ic_glass_logo"
             android:label="@string/title_activity_main">
             <intent-filter>

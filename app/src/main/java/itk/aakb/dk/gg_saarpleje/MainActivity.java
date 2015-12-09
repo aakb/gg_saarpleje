@@ -1,4 +1,4 @@
-package itk.aakb.dk.glasstest;
+package itk.aakb.dk.gg_saarpleje;
 
 import com.google.android.glass.media.Sounds;
 import com.google.android.glass.widget.CardBuilder;
