@@ -47,7 +47,7 @@
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:id="@+id/image_view_2"
-            android:src="@drawable/ic_accept" />
+            android:src="@drawable/ic_stop" />
 
         <EditText
             android:layout_width="wrap_content"
@@ -55,7 +55,7 @@
             android:textSize="10dp"
             android:id="@+id/edit_text_2"
             android:layout_weight="2"
-            android:text="@string/take_video"/>
+            android:text="@string/record_video"/>
     </LinearLayout>
 
     <LinearLayout
@@ -70,7 +70,7 @@
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:id="@+id/image_view_3"
-            android:src="@drawable/ic_accept" />
+            android:src="@drawable/ic_stop" />
 
         <EditText
             android:layout_width="wrap_content"
