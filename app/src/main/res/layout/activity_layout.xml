@@ -4,16 +4,13 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/coming_soon"
+        android:id="@+id/menu_command_text_view"
         android:layout_alignParentTop="true"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/voice_command_test"
+        android:text="@string/voice_command_menu"
         android:textSize="22sp"
-        android:layout_marginRight="40px"
-        android:layout_marginTop="30px"
-        android:layout_marginLeft="210px" />
-
+        android:layout_margin="5dp"/>
 
     <LinearLayout
         android:orientation="horizontal"
