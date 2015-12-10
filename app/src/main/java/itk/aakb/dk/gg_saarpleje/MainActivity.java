@@ -129,24 +129,29 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Update the UI when an image is set.
+     * Update the UI when a step has been completed.
      *
-     * @param index
+     * @param step that step that has been completed.
      */
-    private void imageIsSet(int index) {
-        Log.i(TAG, "Image is set");
+    private void setStepAccept(int step) {
+        Log.i(TAG, "Step " + step +  " has been completed.");
 
         ImageView imageView = null;
 
-        if (index == 0) {
+        if (step == 0) {
             imageView = (ImageView) findViewById(R.id.image_view_1);
         }
-        else if (index == 1) {
+        else if (step == 1) {
             imageView = (ImageView) findViewById(R.id.image_view_2);
         }
+        else if (step == 2) {
+            imageView = (ImageView) findViewById(R.id.image_view_3);
+        }
 
-        imageView.setImageResource(R.drawable.ic_accept);
-        imageView.invalidate();
+        if (imageView != null) {
+            imageView.setImageResource(R.drawable.ic_accept);
+            imageView.invalidate();
+        }
     }
 
     /**
@@ -165,7 +170,12 @@ public class MainActivity extends Activity {
 
             Log.i(TAG, "Picture " + imageIndex + " ready, with path: " + picturePath);
 
-            imageIsSet(imageIndex);
+            if (imageIndex == 0) {
+                setStepAccept(0);
+            }
+            else if (imageIndex == 1) {
+                setStepAccept(2);
+            }
         } else {
             // The file does not exist yet. Before starting the file observer, you
             // can update your UI to let the user know that the application is
@@ -223,6 +233,8 @@ public class MainActivity extends Activity {
             videoPaths.add(videoPath);
 
             Log.i(TAG, "Video ready, with path: " + videoPath);
+
+            setStepAccept(1);
         } else {
             // The file does not exist yet. Before starting the file observer, you
             // can update your UI to let the user know that the application is
