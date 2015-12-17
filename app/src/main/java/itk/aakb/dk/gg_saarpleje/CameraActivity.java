@@ -2,6 +2,7 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import java.io.File;
@@ -17,24 +19,64 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
     private Camera mCamera;
     private CameraPreview mPreview;
     private static final String TAG = "CameraActivity";
+    private Timer timer;
+    private int timerExecutions = 0;
+    private EditText countdownText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        countdownText = (EditText) findViewById(R.id.text_camera_countdown);
+
+        if (!checkCameraHardware(this)) {
+            Log.i(TAG, "no camera");
+        }
+
         // Create an instance of Camera
         mCamera = getCameraInstance();
+
+        // Set auto focus if available
+        Camera.Parameters params = mCamera.getParameters();
+        List<String> focusModes = params.getSupportedFocusModes();
+        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+            // set the focus mode
+            params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+            // set Camera parameters
+            mCamera.setParameters(params);
+        }
 
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
+
+        // Count down from 3 seconds, then take picture.
+        timerExecutions = 0;
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                timerExecutions++;
+
+                countdownText.setText(3 - timerExecutions);
+                countdownText.invalidate();
+
+                if (timerExecutions >= 3) {
+                    cancel();
+                    mCamera.takePicture(null, null, mPicture);
+                }
+            }
+        }, 1000, 1000);
     }
 
     /**
@@ -68,6 +110,7 @@ public class CameraActivity extends Activity {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
+            releaseCamera();
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
             if (pictureFile == null) {
@@ -79,6 +122,14 @@ public class CameraActivity extends Activity {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
                 fos.close();
+
+                // Add path to file as result
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("path", pictureFile.getAbsolutePath());
+                setResult(RESULT_OK, returnIntent);
+
+                // Finish activity
+                finish();
             } catch (FileNotFoundException e) {
                 Log.d(TAG, "File not found: " + e.getMessage());
             } catch (IOException e) {
@@ -86,6 +137,25 @@ public class CameraActivity extends Activity {
             }
         }
     };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        releaseCamera();              // release the camera immediately on pause event
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        releaseCamera();              // release the camera on destroy
+    }
+
+    private void releaseCamera(){
+        if (mCamera != null){
+            mCamera.release();        // release the camera for other applications
+            mCamera = null;
+        }
+    }
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
@@ -112,7 +182,7 @@ public class CameraActivity extends Activity {
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
-                Log.d("MyCameraApp", "failed to create directory");
+                Log.d(TAG, "failed to create directory");
                 return null;
             }
         }

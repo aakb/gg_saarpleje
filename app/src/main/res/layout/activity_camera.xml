@@ -11,6 +11,14 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="false"
         android:layout_alignParentTop="true">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:ems="2"
+            android:id="@+id/text_camera_countdown"
+            android:layout_gravity="right|bottom" />
     </FrameLayout>
 
 </RelativeLayout>

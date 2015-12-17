@@ -2,6 +2,7 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Camera;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.provider.MediaStore;
@@ -19,8 +20,8 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     private static String TAG = "saarpleje";
-    private static final int TAKE_PICTURE_REQUEST = 1;
-    private static final int RECORD_VIDEO_CAPTURE_REQUEST = 2;
+    private static final int TAKE_PICTURE_REQUEST = 101;
+    private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
 
     private int imageIndex = 0;
     private String[] imagePaths = new String[2];
@@ -100,7 +101,9 @@ public class MainActivity extends Activity {
      * Launch a camera image capture intent.
      */
     private void takePicture() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        startActivityForResult(intent, TAKE_PICTURE_REQUEST);
+        Intent intent = new Intent(this, CameraActivity.class);
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
@@ -115,9 +118,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == TAKE_PICTURE_REQUEST && resultCode == RESULT_OK) {
-            String picturePath = data.getStringExtra(Intents.EXTRA_PICTURE_FILE_PATH);
+            Log.i(TAG, "Received result");
+            Log.i(TAG, data.getStringExtra("path"));
+//            String picturePath = data.getStringExtra(Intents.EXTRA_PICTURE_FILE_PATH);
 
-            processPictureWhenReady(picturePath);
+            processPictureWhenReady(data.getStringExtra("path"));
         }
         else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             String videoPath = data.getStringExtra(Intents.EXTRA_VIDEO_FILE_PATH);
