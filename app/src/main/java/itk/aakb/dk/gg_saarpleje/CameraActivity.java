@@ -49,16 +49,6 @@ public class CameraActivity extends Activity {
         // Create an instance of Camera
         mCamera = getCameraInstance();
 
-        // Set auto focus if available
-        Camera.Parameters params = mCamera.getParameters();
-        List<String> focusModes = params.getSupportedFocusModes();
-        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-            // set the focus mode
-            params.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-            // set Camera parameters
-            mCamera.setParameters(params);
-        }
-
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
@@ -102,6 +92,7 @@ public class CameraActivity extends Activity {
      * Trigger take picture on camera.
      */
     public void takePicture() {
+        // Take picture
         mCamera.takePicture(null, null, mPicture);
     }
 
