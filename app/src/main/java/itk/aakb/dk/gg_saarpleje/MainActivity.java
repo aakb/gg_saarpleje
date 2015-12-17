@@ -120,7 +120,6 @@ public class MainActivity extends Activity {
         if (requestCode == TAKE_PICTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received result");
             Log.i(TAG, data.getStringExtra("path"));
-//            String picturePath = data.getStringExtra(Intents.EXTRA_PICTURE_FILE_PATH);
 
             processPictureWhenReady(data.getStringExtra("path"));
         }

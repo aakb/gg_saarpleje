@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,17 +30,20 @@ public class CameraActivity extends Activity {
     private static final String TAG = "CameraActivity";
     private Timer timer;
     private int timerExecutions = 0;
-    private EditText countdownText;
+    private TextView countdownText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        countdownText = (EditText) findViewById(R.id.text_camera_countdown);
+        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
+
+        countdownText.setText("3");
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
+            finish();
         }
 
         // Create an instance of Camera
@@ -68,15 +72,37 @@ public class CameraActivity extends Activity {
             public void run() {
                 timerExecutions++;
 
-                countdownText.setText(3 - timerExecutions);
-                countdownText.invalidate();
+                Log.i(TAG, "" + timerExecutions);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setCountdownText("" + (3 - timerExecutions));
+                    }
+                });
 
                 if (timerExecutions >= 3) {
+                    Log.i(TAG, "timer cancel, take picture");
                     cancel();
-                    mCamera.takePicture(null, null, mPicture);
+                    takePicture();
                 }
             }
-        }, 1000, 1000);
+        }, 2000, 1000);
+    }
+
+    /**
+     * Update the countdown text
+     * @param s the text
+     */
+    public void setCountdownText(String s) {
+        countdownText.setText(s);
+    }
+
+    /**
+     * Trigger take picture on camera.
+     */
+    public void takePicture() {
+        mCamera.takePicture(null, null, mPicture);
     }
 
     /**
@@ -141,13 +167,15 @@ public class CameraActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        releaseCamera();              // release the camera immediately on pause event
+        mPreview.release();
+        releaseCamera();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        releaseCamera();              // release the camera on destroy
+        mPreview.release();
+        releaseCamera();
     }
 
     private void releaseCamera(){
