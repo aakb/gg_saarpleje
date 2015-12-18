@@ -33,76 +33,114 @@ public class CameraActivity extends Activity {
     private int timerExecutions = 0;
     private TextView countdownText;
     private boolean isRecording = false;
+    private String outputPath;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Bundle extras = getIntent().getExtras();
-        if(extras != null) {
-            String requestType = extras.getString("request_type");
-            if (requestType.equals("picture")) {
-                launchAutoPicture();
-            }
-            else {
-                finish();
-            }
-        }
-        else {
-            finish();
-        }
+        Log.i(TAG, "Launching activity");
 
-
-        /* //Record video
-                    if (isRecording) {
-                // stop recording and release camera
-                mMediaRecorder.stop();  // stop the recording
-                releaseMediaRecorder(); // release the MediaRecorder object
-                mCamera.lock();         // take camera access back from MediaRecorder
-
-                // inform the user that recording has stopped
-                setCaptureButtonText("Capture");
-                isRecording = false;
-            } else {
-                // initialize video camera
-                if (prepareVideoRecorder()) {
-                    // Camera is available and unlocked, MediaRecorder is prepared,
-                    // now you can start recording
-                    mMediaRecorder.start();
-
-                    // inform the user that recording has started
-                    setCaptureButtonText("Stop");
-                    isRecording = true;
-                } else {
-                    // prepare didn't work, release the camera
-                    releaseMediaRecorder();
-                    // inform user
-                }
-            }
-         */
-    }
-
-    private void launchAutoPicture() {
         setContentView(R.layout.activity_camera);
-        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
-        countdownText.setText("3");
+        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
             finish();
         }
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
 
-        // Count down from 3 seconds, then take picture.
+        // Reset timer executions.
         timerExecutions = 0;
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String requestType = extras.getString("request_type");
+            if (requestType.equals("picture")) {
+                Log.i(TAG, "launching picture");
+                launchAutoPicture();
+            } else if (requestType.equals("video")) {
+                Log.i(TAG, "launching video");
+                launchAutoVideo();
+            } else {
+                finish();
+            }
+        } else {
+            finish();
+        }
+    }
+
+    /**
+     * Start process to take 10 s video.
+     */
+    private void launchAutoVideo() {
+        countdownText.setText("10");
+
+        // initialize video camera
+        if (prepareVideoRecorder()) {
+            Log.i(TAG, "prepare successful");
+            // Camera is available and unlocked, MediaRecorder is prepared,
+            // now you can start recording
+            mMediaRecorder.start();
+
+            Log.i(TAG, "is recording");
+
+            isRecording = true;
+
+            // Count down from 3 seconds, then take picture.
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    timerExecutions++;
+
+                    Log.i(TAG, "" + timerExecutions);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setCountdownText("" + (10 - timerExecutions));
+                        }
+                    });
+
+                    if (timerExecutions >= 10) {
+                        mMediaRecorder.stop();  // stop the recording
+                        releaseMediaRecorder(); // release the MediaRecorder object
+                        mCamera.lock();         // take camera access back from MediaRecorder
+
+                        // Add path to file as result
+                        Intent returnIntent = new Intent();
+                        returnIntent.putExtra("path", outputPath);
+                        setResult(RESULT_OK, returnIntent);
+
+                        // Finish activity
+                        finish();
+                    }
+                }
+            }, 1000, 1000);
+        } else {
+            Log.i(TAG, "prepare didn't work, release the camera");
+
+            // prepare didn't work, release the camera
+            releaseMediaRecorder();
+            // @TODO: Report error
+        }
+    }
+
+    /**
+     * Start process to take picture after 3 s.
+     */
+    private void launchAutoPicture() {
+        countdownText.setText("3");
+
+        // Create an instance of Camera
+        mCamera = getCameraInstance();
+
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -149,12 +187,17 @@ public class CameraActivity extends Activity {
      */
     public static Camera getCameraInstance() {
         Camera c = null;
+
+        Log.i(TAG, "getting camera instance...");
         try {
             c = Camera.open(); // attempt to get a Camera instance
         } catch (Exception e) {
+            Log.e(TAG, "could not getCameraInstance");
             // Camera is not available (in use or does not exist)
             // @TODO: Throw Toast!
         }
+
+        Log.i(TAG, "got camera instance");
         return c; // returns null if camera is unavailable
     }
 
@@ -206,7 +249,6 @@ public class CameraActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        mPreview.release();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
     }
@@ -214,7 +256,6 @@ public class CameraActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mPreview.release();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
     }
@@ -224,12 +265,14 @@ public class CameraActivity extends Activity {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
             mMediaRecorder = null;
+            mCamera.stopPreview();
             mCamera.lock();           // lock camera for later use
         }
     }
 
     private void releaseCamera() {
         if (mCamera != null) {
+            mCamera.stopPreview();
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
@@ -282,25 +325,44 @@ public class CameraActivity extends Activity {
     }
 
     private boolean prepareVideoRecorder() {
+        Log.i(TAG, "start preparing video recording");
+
+        Log.i(TAG, "get camera instance");
         mCamera = getCameraInstance();
+
+        Log.i(TAG, "new media recorder");
         mMediaRecorder = new MediaRecorder();
 
-        // Step 1: Unlock and set camera to MediaRecorder
+        // Step 1: Unlock and set camera to MediaRecorder. Clear preview.
+        Log.i(TAG, "unlock and set camera to MediaRecorder");
+        mCamera.stopPreview();
+        try {
+            mCamera.setPreviewDisplay(null);
+        } catch (java.io.IOException ioe) {
+            Log.d(TAG, "IOException nullifying preview display: " + ioe.getMessage());
+        }
         mCamera.unlock();
         mMediaRecorder.setCamera(mCamera);
 
         // Step 2: Set sources
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        Log.i(TAG, "set sources");
+//        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
+        Log.i(TAG, "set camcorder profile");
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
         // Step 4: Set output file
-        mMediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
+        Log.i(TAG, "set output file");
+        outputPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
+        mMediaRecorder.setOutputFile(outputPath);
 
         // Step 5: Set the preview output
+        Log.i(TAG, "set preview");
         mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+
+        Log.i(TAG, "finished configuration.");
 
         // Step 6: Prepare configured MediaRecorder
         try {

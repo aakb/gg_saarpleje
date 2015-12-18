@@ -107,7 +107,10 @@ public class MainActivity extends Activity {
     }
 
     private void recordVideo() {
-        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        //Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        //startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
+        Intent intent = new Intent(this, CameraActivity.class);
+        intent.putExtra("request_type", "video");
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
@@ -230,9 +233,8 @@ public class MainActivity extends Activity {
         final File videoFile = new File(videoPath);
 
         if (videoFile.exists()) {
-            // The picture is ready. We are not gonna work with it, but now we know it has been
+            // The video is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
-
             videoPaths.add(videoPath);
 
             Log.i(TAG, "Video ready, with path: " + videoPath);
