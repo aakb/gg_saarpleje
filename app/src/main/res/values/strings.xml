@@ -7,4 +7,5 @@
     <string name="take_after_image">take after image</string>
     <string name="record_video">record video</string>
     <string name="countdown_default">...</string>
+    <string name="title_activity_video">VideoActivity</string>
 </resources>

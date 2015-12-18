@@ -6,11 +6,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.media.CamcorderProfile;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -20,23 +21,69 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
     private Camera mCamera;
     private CameraPreview mPreview;
+    private MediaRecorder mMediaRecorder;
     private static final String TAG = "CameraActivity";
     private Timer timer;
     private int timerExecutions = 0;
     private TextView countdownText;
+    private boolean isRecording = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera);
 
+        Bundle extras = getIntent().getExtras();
+        if(extras != null) {
+            String requestType = extras.getString("request_type");
+            if (requestType.equals("picture")) {
+                launchAutoPicture();
+            }
+            else {
+                finish();
+            }
+        }
+        else {
+            finish();
+        }
+
+
+        /* //Record video
+                    if (isRecording) {
+                // stop recording and release camera
+                mMediaRecorder.stop();  // stop the recording
+                releaseMediaRecorder(); // release the MediaRecorder object
+                mCamera.lock();         // take camera access back from MediaRecorder
+
+                // inform the user that recording has stopped
+                setCaptureButtonText("Capture");
+                isRecording = false;
+            } else {
+                // initialize video camera
+                if (prepareVideoRecorder()) {
+                    // Camera is available and unlocked, MediaRecorder is prepared,
+                    // now you can start recording
+                    mMediaRecorder.start();
+
+                    // inform the user that recording has started
+                    setCaptureButtonText("Stop");
+                    isRecording = true;
+                } else {
+                    // prepare didn't work, release the camera
+                    releaseMediaRecorder();
+                    // inform user
+                }
+            }
+         */
+    }
+
+    private void launchAutoPicture() {
+        setContentView(R.layout.activity_camera);
         countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
         countdownText.setText("3");
@@ -82,6 +129,7 @@ public class CameraActivity extends Activity {
 
     /**
      * Update the countdown text
+     *
      * @param s the text
      */
     public void setCountdownText(String s) {
@@ -159,6 +207,7 @@ public class CameraActivity extends Activity {
     protected void onPause() {
         super.onPause();
         mPreview.release();
+        releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
     }
 
@@ -166,11 +215,21 @@ public class CameraActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mPreview.release();
+        releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
     }
 
-    private void releaseCamera(){
-        if (mCamera != null){
+    private void releaseMediaRecorder() {
+        if (mMediaRecorder != null) {
+            mMediaRecorder.reset();   // clear recorder configuration
+            mMediaRecorder.release(); // release the recorder object
+            mMediaRecorder = null;
+            mCamera.lock();           // lock camera for later use
+        }
+    }
+
+    private void releaseCamera() {
+        if (mCamera != null) {
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
@@ -220,5 +279,41 @@ public class CameraActivity extends Activity {
         }
 
         return mediaFile;
+    }
+
+    private boolean prepareVideoRecorder() {
+        mCamera = getCameraInstance();
+        mMediaRecorder = new MediaRecorder();
+
+        // Step 1: Unlock and set camera to MediaRecorder
+        mCamera.unlock();
+        mMediaRecorder.setCamera(mCamera);
+
+        // Step 2: Set sources
+        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+        // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
+        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+
+        // Step 4: Set output file
+        mMediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
+
+        // Step 5: Set the preview output
+        mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+
+        // Step 6: Prepare configured MediaRecorder
+        try {
+            mMediaRecorder.prepare();
+        } catch (IllegalStateException e) {
+            Log.d(TAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
+            releaseMediaRecorder();
+            return false;
+        } catch (IOException e) {
+            Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
+            releaseMediaRecorder();
+            return false;
+        }
+        return true;
     }
 }

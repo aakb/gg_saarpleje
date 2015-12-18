@@ -101,9 +101,8 @@ public class MainActivity extends Activity {
      * Launch a camera image capture intent.
      */
     private void takePicture() {
-//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        startActivityForResult(intent, TAKE_PICTURE_REQUEST);
         Intent intent = new Intent(this, CameraActivity.class);
+        intent.putExtra("request_type", "picture");
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
