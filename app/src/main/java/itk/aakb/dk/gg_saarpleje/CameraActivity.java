@@ -128,6 +128,9 @@ public class CameraActivity extends Activity {
 
             // prepare didn't work, release the camera
             releaseMediaRecorder();
+            releaseCamera();
+
+            finish();
             // @TODO: Report error
         }
     }
@@ -193,11 +196,11 @@ public class CameraActivity extends Activity {
             c = Camera.open(); // attempt to get a Camera instance
         } catch (Exception e) {
             Log.e(TAG, "could not getCameraInstance");
+            throw e;
             // Camera is not available (in use or does not exist)
             // @TODO: Throw Toast!
         }
 
-        Log.i(TAG, "got camera instance");
         return c; // returns null if camera is unavailable
     }
 
@@ -265,7 +268,6 @@ public class CameraActivity extends Activity {
             mMediaRecorder.reset();   // clear recorder configuration
             mMediaRecorder.release(); // release the recorder object
             mMediaRecorder = null;
-            mCamera.stopPreview();
             mCamera.lock();           // lock camera for later use
         }
     }
@@ -325,57 +327,74 @@ public class CameraActivity extends Activity {
     }
 
     private boolean prepareVideoRecorder() {
-        Log.i(TAG, "start preparing video recording");
-
-        Log.i(TAG, "get camera instance");
-        mCamera = getCameraInstance();
-
-        Log.i(TAG, "new media recorder");
-        mMediaRecorder = new MediaRecorder();
-
-        // Step 1: Unlock and set camera to MediaRecorder. Clear preview.
-        Log.i(TAG, "unlock and set camera to MediaRecorder");
-        mCamera.stopPreview();
+        // Catch all errors, and release camera on error.
         try {
-            mCamera.setPreviewDisplay(null);
-        } catch (java.io.IOException ioe) {
-            Log.d(TAG, "IOException nullifying preview display: " + ioe.getMessage());
-        }
-        mCamera.unlock();
-        mMediaRecorder.setCamera(mCamera);
+            Log.i(TAG, "start preparing video recording");
 
-        // Step 2: Set sources
-        Log.i(TAG, "set sources");
-//        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            Log.i(TAG, "get camera instance");
+            mCamera = getCameraInstance();
 
-        // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
-        Log.i(TAG, "set camcorder profile");
-        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+            Log.i(TAG, "Setting camera hint");
+            mCamera.getParameters().setRecordingHint(true);
 
-        // Step 4: Set output file
-        Log.i(TAG, "set output file");
-        outputPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
-        mMediaRecorder.setOutputFile(outputPath);
+            Log.i(TAG, "new media recorder");
+            mMediaRecorder = new MediaRecorder();
 
-        // Step 5: Set the preview output
-        Log.i(TAG, "set preview");
-        mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+            Log.i(TAG, "setting up error listener");
+            mMediaRecorder.setOnErrorListener(new android.media.MediaRecorder.OnErrorListener() {
+                public void onError(MediaRecorder mediarecorder1, int k, int i1) {
+                    Log.e(TAG, String.format("Media Recorder error: k=%d, i1=%d", k, i1));
+                }
 
-        Log.i(TAG, "finished configuration.");
+            });
 
-        // Step 6: Prepare configured MediaRecorder
-        try {
+            // Step 1: Unlock and set camera to MediaRecorder. Clear preview.
+            Log.i(TAG, "unlock and set camera to MediaRecorder");
+/*            try {
+                mCamera.setPreviewDisplay(null);
+            } catch (java.io.IOException ioe) {
+                Log.d(TAG, "IOException nullifying preview display: " + ioe.getMessage());
+            }
+            mCamera.stopPreview();*/
+            mCamera.unlock();
+            mMediaRecorder.setCamera(mCamera);
+
+            // Step 2: Set sources
+            Log.i(TAG, "set sources");
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+            // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
+            Log.i(TAG, "set camcorder profile");
+            mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+
+            // Step 4: Set output file
+            Log.i(TAG, "set output file");
+            outputPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
+            mMediaRecorder.setOutputFile(outputPath);
+
+            // Step 5: Set the preview output
+            Log.i(TAG, "set preview");
+            mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+
+            Log.i(TAG, "finished configuration.");
+
+            // Step 6: Prepare configured MediaRecorder
             mMediaRecorder.prepare();
-        } catch (IllegalStateException e) {
-            Log.d(TAG, "IllegalStateException preparing MediaRecorder: " + e.getMessage());
-            releaseMediaRecorder();
-            return false;
-        } catch (IOException e) {
-            Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
-            releaseMediaRecorder();
+        }
+        catch (IllegalStateException e) {
+            Log.d(TAG, "IllegalStateException preparing MediaRecorder (" + e.getCause() + "): " + e.getMessage());
             return false;
         }
+        catch (IOException e) {
+            Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
+            return false;
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Exception preparing MediaRecorder: " + e.getMessage());
+            return false;
+        }
+
         return true;
     }
 }
