@@ -2,7 +2,6 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Camera;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.provider.MediaStore;
@@ -84,8 +83,6 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i("saarpleje", "finish report");
 
-                    // @TODO: Handle
-
                     break;
                 default:
                     return true;
@@ -102,16 +99,14 @@ public class MainActivity extends Activity {
      */
     private void takePicture() {
         Intent intent = new Intent(this, CameraActivity.class);
-        intent.putExtra("request_type", "picture");
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
     private void recordVideo() {
-        //Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        //startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
-        Intent intent = new Intent(this, CameraActivity.class);
-        intent.putExtra("request_type", "video");
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
+//        Intent intent = new Intent(this, VideoActivity.class);
+//        startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
     /**
