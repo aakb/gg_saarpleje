@@ -8,4 +8,7 @@
     <string name="record_video">record video</string>
     <string name="countdown_default">...</string>
     <string name="title_activity_video">VideoActivity</string>
+    <string name="progress_before_image">Before image</string>
+    <string name="progress_after_image">After image</string>
+    <string name="progress_videos">Videos</string>
 </resources>
