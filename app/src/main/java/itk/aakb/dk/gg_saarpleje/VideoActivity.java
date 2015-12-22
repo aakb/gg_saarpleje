@@ -29,6 +29,7 @@ public class VideoActivity extends Activity {
     private int timerExecutions = 0;
     private TextView countdownText;
     private String outputPath;
+    private static final String FILE_DIRECTORY = "saarpleje";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -263,7 +264,7 @@ public class VideoActivity extends Activity {
         // using Environment.getExternalStorageState() before doing this.
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "MyCameraApp");
+                Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
         // This location works best if you want the created images to be shared
         // between applications and persist after your app has been uninstalled.
 
