@@ -1,4 +1,4 @@
-package itk.aakb.dk.glasstest;
+package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
