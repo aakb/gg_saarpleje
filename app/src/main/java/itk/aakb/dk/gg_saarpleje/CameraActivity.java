@@ -179,6 +179,7 @@ public class CameraActivity extends Activity {
     private void releaseCamera() {
         if (mCamera != null) {
             mCamera.stopPreview();
+            mPreview.release();
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
