@@ -50,6 +50,9 @@ public class VideoActivity extends Activity {
             finish();
         }
 
+        Log.i(TAG, "get camera instance");
+        mCamera = getCameraInstance();
+
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
@@ -70,9 +73,6 @@ public class VideoActivity extends Activity {
         // Catch all errors, and release camera on error.
         try {
             Log.i(TAG, "start preparing video recording");
-
-            Log.i(TAG, "get camera instance");
-            mCamera = getCameraInstance();
 
             Log.i(TAG, "Setting camera hint");
             Camera.Parameters params = mCamera.getParameters();
@@ -112,7 +112,6 @@ public class VideoActivity extends Activity {
             (new Timer()).schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    // Step 6: Prepare configured MediaRecorder
                     try {
                         // Step 5: Set the preview output
                         Log.i(TAG, "set preview");
@@ -120,6 +119,7 @@ public class VideoActivity extends Activity {
 
                         Log.i(TAG, "finished configuration.");
 
+                        // Step 6: Prepare configured MediaRecorder
                         mMediaRecorder.prepare();
                     }
                     catch (IOException e) {
