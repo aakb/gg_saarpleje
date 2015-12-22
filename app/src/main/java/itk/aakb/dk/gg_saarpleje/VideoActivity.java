@@ -5,10 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -16,8 +14,6 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,7 +28,6 @@ public class VideoActivity extends Activity {
     private Timer timer;
     private int timerExecutions = 0;
     private TextView countdownText;
-    private boolean isRecording = false;
     private String outputPath;
 
     @Override
@@ -136,8 +131,6 @@ public class VideoActivity extends Activity {
                     mMediaRecorder.start();
 
                     Log.i(TAG, "is recording");
-
-                    isRecording = true;
 
                     // Count down from 3 seconds, then take picture.
                     timer = new Timer();
