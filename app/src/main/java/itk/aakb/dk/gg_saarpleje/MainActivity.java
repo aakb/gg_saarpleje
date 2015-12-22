@@ -103,10 +103,8 @@ public class MainActivity extends Activity {
     }
 
     private void recordVideo() {
-        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        Intent intent = new Intent(this, VideoActivity.class);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
-//        Intent intent = new Intent(this, VideoActivity.class);
-//        startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
     /**
@@ -115,15 +113,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == TAKE_PICTURE_REQUEST && resultCode == RESULT_OK) {
-            Log.i(TAG, "Received result");
-            Log.i(TAG, data.getStringExtra("path"));
+            Log.i(TAG, "Received image: " + data.getStringExtra("path"));
 
             processPictureWhenReady(data.getStringExtra("path"));
         }
         else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
-            String videoPath = data.getStringExtra(Intents.EXTRA_VIDEO_FILE_PATH);
+            Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
-            processVideoWhenReady(videoPath);
+            processVideoWhenReady(data.getStringExtra("path"));
         }
 
         super.onActivityResult(requestCode, resultCode, data);

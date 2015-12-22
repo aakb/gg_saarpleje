@@ -149,9 +149,11 @@ public class VideoActivity extends Activity {
                             });
 
                             if (timerExecutions >= 10) {
+                                cancel();
+
                                 mMediaRecorder.stop();  // stop the recording
                                 releaseMediaRecorder(); // release the MediaRecorder object
-                                mCamera.lock();         // take camera access back from MediaRecorder
+                                releaseCamera();
 
                                 // Add path to file as result
                                 Intent returnIntent = new Intent();
