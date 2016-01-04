@@ -86,27 +86,49 @@ public class MainActivity extends Activity {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
             switch (item.getItemId()) {
                 case R.id.take_before_image_menu_item:
-                    Log.i("saarpleje", "take before image");
+                    Log.i(TAG, "menu: take before image");
 
                     imageIndex = 0;
                     takePicture();
 
                     break;
                 case R.id.take_after_image_menu_item:
-                    Log.i("saarpleje", "take after image");
+                    Log.i(TAG, "menu: take after image");
 
                     imageIndex = 1;
                     takePicture();
 
                     break;
                 case R.id.record_video_menu_item:
-                    Log.i("saarpleje", "record video");
+                    Log.i(TAG, "menu: record video");
 
-                    recordVideo();
+                    break;
+                case R.id.record_video_menu_item_30_seconds:
+                    Log.i(TAG, "menu: record 30 seconds video");
+
+                    recordVideo(30);
+
+                    break;
+                case R.id.record_video_menu_item_1_minute:
+                    Log.i(TAG, "menu: record 1 minute video");
+
+                    recordVideo(60);
+
+                    break;
+                case R.id.record_video_menu_item_2_minutes:
+                    Log.i(TAG, "menu: record 2 minutes video");
+
+                    recordVideo(120);
+
+                    break;
+                case R.id.record_video_menu_item_4_minutes:
+                    Log.i(TAG, "menu: record 4 minutes video");
+
+                    recordVideo(240);
 
                     break;
                 case R.id.finish_menu_item:
-                    Log.i("saarpleje", "finish report");
+                    Log.i(TAG, "menu: finish report");
 
                     break;
                 default:
@@ -129,10 +151,12 @@ public class MainActivity extends Activity {
 
     /**
      * Launch the record video intent.
+     *
+     * @param duration
      */
-    private void recordVideo() {
+    private void recordVideo(int duration) {
         Intent intent = new Intent(this, VideoActivity.class);
-        intent.putExtra("SECONDS", 12);
+        intent.putExtra("SECONDS", duration);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
