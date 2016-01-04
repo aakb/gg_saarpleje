@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
      */
     private void recordVideo() {
         Intent intent = new Intent(this, VideoActivity.class);
+        intent.putExtra("SECONDS", 12);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 

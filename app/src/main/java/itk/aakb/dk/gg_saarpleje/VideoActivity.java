@@ -31,7 +31,7 @@ public class VideoActivity extends Activity {
 
     private Timer timer;
     private int timerExecutions = 0;
-    private int videoLength = 10;
+    private int videoLength;    // in seconds
 
     private String outputPath;
 
@@ -43,6 +43,10 @@ public class VideoActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Get number of seconds to record.
+        Intent intent = getIntent();
+        videoLength = intent.getIntExtra("SECONDS", 10);
 
         Log.i(TAG, "Launching activity");
 
