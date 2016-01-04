@@ -6,7 +6,22 @@
         android:title="@string/take_before_image" />
     <item
         android:id="@+id/record_video_menu_item"
-        android:title="@string/record_video" />
+        android:title="@string/record_video">
+        <menu>
+            <item
+                android:id="@+id/record_video_menu_item_30_seconds"
+                android:title="@string/thirty_seconds" />
+            <item
+                android:id="@+id/record_video_menu_item_1_minute"
+                android:title="@string/one_minute" />
+            <item
+                android:id="@+id/record_video_menu_item_2_minutes"
+                android:title="@string/two_minutes" />
+            <item
+                android:id="@+id/record_video_menu_item_4_minutes"
+                android:title="@string/four_minutes" />
+        </menu>
+    </item>
     <item
         android:id="@+id/take_after_image_menu_item"
         android:title="@string/take_after_image" />
