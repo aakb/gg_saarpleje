@@ -4,13 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.FileObserver;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
-import com.google.android.glass.content.Intents;
 import com.google.android.glass.view.WindowUtils;
 
 import java.io.File;
@@ -18,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    private static String TAG = "saarpleje";
+    private static final String TAG = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
 
@@ -26,6 +24,11 @@ public class MainActivity extends Activity {
     private String[] imagePaths = new String[2];
     private List<String> videoPaths = new ArrayList<String>();
 
+    /**
+     * On create.
+     *
+     * @param bundle
+     */
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -39,6 +42,13 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_layout);
     }
 
+    /**
+     * On create panel menu.
+     *
+     * @param featureId
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
@@ -50,12 +60,27 @@ public class MainActivity extends Activity {
         return super.onCreatePanelMenu(featureId, menu);
     }
 
+    /**
+     * On create options menu.
+     *
+     * @param menu
+     * @return
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
+    /**
+     * On menu item selected.
+     *
+     * Processes the voice commands from the main menu.
+     *
+     * @param featureId
+     * @param item
+     * @return
+     */
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
@@ -95,20 +120,25 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Launch a camera image capture intent.
+     * Launch the image capture intent.
      */
     private void takePicture() {
         Intent intent = new Intent(this, CameraActivity.class);
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
+    /**
+     * Launch the record video intent.
+     */
     private void recordVideo() {
         Intent intent = new Intent(this, VideoActivity.class);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
     /**
-     * When the camera activity returns, it is intercepted in this method.
+     * On activity result.
+     *
+     * When an intent returns, it is intercepted in this method.
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

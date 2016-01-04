@@ -21,16 +21,25 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class VideoActivity extends Activity {
-    private Camera mCamera;
-    private CameraPreview mPreview;
-    private MediaRecorder mMediaRecorder;
     private static final String TAG = "VideoActivity";
-    private Timer timer;
-    private int timerExecutions = 0;
-    private TextView countdownText;
-    private String outputPath;
     private static final String FILE_DIRECTORY = "saarpleje";
 
+    private Camera camera;
+    private CameraPreview cameraPreview;
+    private MediaRecorder mediaRecorder;
+    private TextView countdownText;
+
+    private Timer timer;
+    private int timerExecutions = 0;
+    private int videoLength = 10;
+
+    private String outputPath;
+
+    /**
+     * On create.
+     *
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,12 +56,12 @@ public class VideoActivity extends Activity {
         }
 
         Log.i(TAG, "get camera instance");
-        mCamera = getCameraInstance();
+        camera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
+        cameraPreview = new CameraPreview(this, camera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
+        preview.addView(cameraPreview);
 
         // Reset timer executions.
         timerExecutions = 0;
@@ -64,22 +73,22 @@ public class VideoActivity extends Activity {
      * Start process to take 10 s video.
      */
     private void launchAutoVideo() {
-        countdownText.setText("10");
+        countdownText.setText("" + videoLength);
 
         // Catch all errors, and release camera on error.
         try {
             Log.i(TAG, "start preparing video recording");
 
             Log.i(TAG, "Setting camera hint");
-            Camera.Parameters params = mCamera.getParameters();
+            Camera.Parameters params = camera.getParameters();
             params.setRecordingHint(true);
-            mCamera.setParameters(params);
+            camera.setParameters(params);
 
             Log.i(TAG, "new media recorder");
-            mMediaRecorder = new MediaRecorder();
+            mediaRecorder = new MediaRecorder();
 
             Log.i(TAG, "setting up error listener");
-            mMediaRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
+            mediaRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
                 public void onError(MediaRecorder mediarecorder1, int k, int i1) {
                     Log.e(TAG, String.format("Media Recorder error: k=%d, i1=%d", k, i1));
                 }
@@ -88,22 +97,22 @@ public class VideoActivity extends Activity {
 
             // Step 1: Unlock and set camera to MediaRecorder. Clear preview.
             Log.i(TAG, "unlock and set camera to MediaRecorder");
-            mCamera.unlock();
-            mMediaRecorder.setCamera(mCamera);
+            camera.unlock();
+            mediaRecorder.setCamera(camera);
 
             // Step 2: Set sources
             Log.i(TAG, "set sources");
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
             // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
             Log.i(TAG, "set camcorder profile");
-            mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
+            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 
             // Step 4: Set output file
             Log.i(TAG, "set output file");
             outputPath = getOutputVideoFile().toString();
-            mMediaRecorder.setOutputFile(outputPath);
+            mediaRecorder.setOutputFile(outputPath);
 
             (new Timer()).schedule(new TimerTask() {
                 @Override
@@ -111,12 +120,12 @@ public class VideoActivity extends Activity {
                     try {
                         // Step 5: Set the preview output
                         Log.i(TAG, "set preview");
-                        mMediaRecorder.setPreviewDisplay(mPreview.getHolder().getSurface());
+                        mediaRecorder.setPreviewDisplay(cameraPreview.getHolder().getSurface());
 
                         Log.i(TAG, "finished configuration.");
 
                         // Step 6: Prepare configured MediaRecorder
-                        mMediaRecorder.prepare();
+                        mediaRecorder.prepare();
                     }
                     catch (IOException e) {
                         Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
@@ -129,11 +138,11 @@ public class VideoActivity extends Activity {
 
                     // Camera is available and unlocked, MediaRecorder is prepared,
                     // now you can start recording
-                    mMediaRecorder.start();
+                    mediaRecorder.start();
 
                     Log.i(TAG, "is recording");
 
-                    // Count down from 3 seconds, then take picture.
+                    // Count down from videoLength seconds, then take picture.
                     timer = new Timer();
                     timer.schedule(new TimerTask() {
                         @Override
@@ -145,14 +154,14 @@ public class VideoActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    setCountdownText("" + (10 - timerExecutions));
+                                    countdownText.setText("" + (videoLength - timerExecutions));
                                 }
                             });
 
-                            if (timerExecutions >= 10) {
+                            if (timerExecutions >= videoLength) {
                                 cancel();
 
-                                mMediaRecorder.stop();  // stop the recording
+                                mediaRecorder.stop();  // stop the recording
                                 releaseMediaRecorder(); // release the MediaRecorder object
                                 releaseCamera();
 
@@ -181,15 +190,6 @@ public class VideoActivity extends Activity {
             releaseCamera();
             finish();
         }
-    }
-
-    /**
-     * Update the countdown text
-     *
-     * @param s the text
-     */
-    public void setCountdownText(String s) {
-        countdownText.setText(s);
     }
 
     /**
@@ -224,6 +224,9 @@ public class VideoActivity extends Activity {
         }
     }
 
+    /**
+     * On pause.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -231,6 +234,9 @@ public class VideoActivity extends Activity {
         releaseCamera();
     }
 
+    /**
+     * On destroy.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -238,35 +244,37 @@ public class VideoActivity extends Activity {
         releaseCamera();
     }
 
+    /**
+     * Release the media recorder.
+     */
     private void releaseMediaRecorder() {
-        if (mMediaRecorder != null) {
-            mMediaRecorder.reset();   // clear recorder configuration
-            mMediaRecorder.release(); // release the recorder object
-            mMediaRecorder = null;
-            mCamera.lock();           // lock camera for later use
-        }
-    }
-
-    private void releaseCamera() {
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            mPreview.release();
-            mCamera.release();        // release the camera for other applications
-            mCamera = null;
+        if (mediaRecorder != null) {
+            mediaRecorder.reset();   // clear recorder configuration
+            mediaRecorder.release(); // release the recorder object
+            mediaRecorder = null;
+            camera.lock();           // lock camera for later use
         }
     }
 
     /**
-     * Create a File for saving an image or video
+     * Release the camera.
+     */
+    private void releaseCamera() {
+        if (camera != null) {
+            camera.stopPreview();
+            cameraPreview.release();
+            camera.release();        // release the camera for other applications
+            camera = null;
+        }
+    }
+
+    /**
+     * Create a File for saving a video
      */
     private static File getOutputVideoFile() {
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
+        // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {

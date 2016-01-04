@@ -22,14 +22,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
-    private Camera mCamera;
-    private CameraPreview mPreview;
     private static final String TAG = "CameraActivity";
-    private Timer timer;
-    private int timerExecutions = 0;
-    private TextView countdownText;
     private static final String FILE_DIRECTORY = "saarpleje";
 
+    private Camera camera;
+    private CameraPreview cameraPreview;
+    private TextView countdownText;
+
+    private Timer timer;
+    private int timerExecutions = 0;
+
+    /**
+     * On create.
+     *
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,12 +53,12 @@ public class CameraActivity extends Activity {
         }
 
         // Create an instance of Camera
-        mCamera = getCameraInstance();
+        camera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
+        cameraPreview = new CameraPreview(this, camera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
+        preview.addView(cameraPreview);
 
         // Reset timer executions.
         timerExecutions = 0;
@@ -69,35 +76,18 @@ public class CameraActivity extends Activity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        setCountdownText("" + (3 - timerExecutions));
+                        countdownText.setText("" + (3 - timerExecutions));
                     }
                 });
 
                 if (timerExecutions >= 3) {
                     Log.i(TAG, "timer cancel, take picture");
                     cancel();
-                    takePicture();
+                    // Take picture
+                    camera.takePicture(null, null, mPicture);
                 }
             }
         }, 2000, 1000);
-    }
-
-    /**
-     * Update the countdown text
-     *
-     * @param s the text
-     */
-    public void setCountdownText(String s) {
-        countdownText.setText(s);
-    }
-
-    /**
-     * Trigger take picture on camera.
-     */
-    public void takePicture() {
-        Log.i(TAG, "take picture");
-        // Take picture
-        mCamera.takePicture(null, null, mPicture);
     }
 
     /**
@@ -132,6 +122,9 @@ public class CameraActivity extends Activity {
         }
     }
 
+    /**
+     * Picture callback.
+     */
     private PictureCallback mPicture = new PictureCallback() {
 
         @Override
@@ -164,24 +157,33 @@ public class CameraActivity extends Activity {
         }
     };
 
+    /**
+     * On pause.
+     */
     @Override
     protected void onPause() {
         super.onPause();
         releaseCamera();
     }
 
+    /**
+     * On destroy.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         releaseCamera();
     }
 
+    /**
+     * Release the camera resources.
+     */
     private void releaseCamera() {
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            mPreview.release();
-            mCamera.release();        // release the camera for other applications
-            mCamera = null;
+        if (camera != null) {
+            camera.stopPreview();
+            cameraPreview.release();
+            camera.release();        // release the camera for other applications
+            camera = null;
         }
     }
 
@@ -189,12 +191,9 @@ public class CameraActivity extends Activity {
      * Create a File for saving an image
      */
     private static File getOutputImageFile() {
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
+        // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
