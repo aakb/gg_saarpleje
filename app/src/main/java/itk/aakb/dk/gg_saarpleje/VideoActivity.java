@@ -44,7 +44,7 @@ public class VideoActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Get number of seconds to record.
+        // Get number of seconds to record. Defaults to 10 seconds.
         Intent intent = getIntent();
         videoLength = intent.getIntExtra("SECONDS", 10);
 
