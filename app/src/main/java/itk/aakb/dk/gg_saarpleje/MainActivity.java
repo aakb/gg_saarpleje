@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.glass.view.WindowUtils;
 
@@ -39,7 +40,7 @@ public class MainActivity extends Activity {
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
         // Set the main activity view.
-        setContentView(R.layout.activity_layout);
+        setContentView(R.layout.activity_layout2);
     }
 
     /**
@@ -190,20 +191,27 @@ public class MainActivity extends Activity {
         Log.i(TAG, "Step " + step +  " has been completed.");
 
         ImageView imageView = null;
+        TextView textView = null;
 
         if (step == 0) {
             imageView = (ImageView) findViewById(R.id.image_view_1);
+            textView = (TextView) findViewById(R.id.edit_text_1);
         }
         else if (step == 1) {
             imageView = (ImageView) findViewById(R.id.image_view_2);
+            textView = (TextView) findViewById(R.id.edit_text_2);
         }
         else if (step == 2) {
             imageView = (ImageView) findViewById(R.id.image_view_3);
+            textView = (TextView) findViewById(R.id.edit_text_3);
         }
 
         if (imageView != null) {
             imageView.setImageResource(R.drawable.ic_accept);
             imageView.invalidate();
+
+            textView.setText("2");
+            textView.invalidate();
         }
     }
 
