@@ -35,12 +35,11 @@ public class VideoActivity extends Activity {
 
     private Timer timer;
     private int timerExecutions = 0;
-    private int videoLength;    // in seconds
+    private int videoLength;
     private boolean unlimited;
     private boolean recording = false;
 
     private String outputPath;
-
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -49,11 +48,8 @@ public class VideoActivity extends Activity {
     private float[] mLastMagnetometer = new float[3];
     private boolean mLastAccelerometerSet = false;
     private boolean mLastMagnetometerSet = false;
-
     private float[] mR = new float[9];
     private float[] mOrientation = new float[3];
-
-
 
     /**
      * On create.
@@ -91,11 +87,11 @@ public class VideoActivity extends Activity {
         // Reset timer executions.
         timerExecutions = 0;
 
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
         if (unlimited) {
+            mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
             mSensorManager.registerListener(mSensorEventListener, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
             mSensorManager.registerListener(mSensorEventListener, mMagnetometer, SensorManager.SENSOR_DELAY_UI);
 
@@ -356,22 +352,34 @@ public class VideoActivity extends Activity {
 
                 Log.i(TAG, "o: " + mOrientation[1]);
 
-                if (mOrientation[1] < 0.05) {
-                    Log.i(TAG, "STOPPP!!!!");
+                if (Math.abs(mOrientation[1]) < 0.10) {
                     if (recording) {
-                        recording = false;
+                        Log.i(TAG, "Stop recording!");
 
-                        mediaRecorder.stop();  // stop the recording
-                        releaseMediaRecorder(); // release the MediaRecorder object
-                        releaseCamera();
+                        timer.cancel();
+                        mSensorManager.unregisterListener(mSensorEventListener);
 
-                        // Add path to file as result
-                        Intent returnIntent = new Intent();
-                        returnIntent.putExtra("path", outputPath);
-                        setResult(RESULT_OK, returnIntent);
+                        try {
+                            mediaRecorder.stop();  // stop the recording
+                            releaseMediaRecorder(); // release the MediaRecorder object
+                            releaseCamera();
 
-                        // Finish activity
-                        finish();
+                            // Add path to file as result
+                            Intent returnIntent = new Intent();
+                            returnIntent.putExtra("path", outputPath);
+                            setResult(RESULT_OK, returnIntent);
+
+                            recording = false;
+
+                            // Finish activity
+                            finish();
+                        }
+                        catch (Exception e) {
+                            Log.d(TAG, "Exception stopping recording: " + e.getMessage());
+                            releaseMediaRecorder();
+                            releaseCamera();
+                            finish();
+                        }
                     }
                 }
             }
@@ -417,6 +425,8 @@ public class VideoActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+
+        timer.cancel();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
@@ -429,8 +439,12 @@ public class VideoActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        timer.cancel();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
+
+        mSensorManager.unregisterListener(mSensorEventListener);
     }
 
     @Override

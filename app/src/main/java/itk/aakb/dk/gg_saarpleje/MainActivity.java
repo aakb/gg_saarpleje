@@ -109,12 +109,6 @@ public class MainActivity extends Activity {
                     recordVideo(30);
 
                     break;
-                case R.id.record_video_menu_item_1_minute:
-                    Log.i(TAG, "menu: record 1 minute video");
-
-                    recordVideo(60);
-
-                    break;
                 case R.id.record_video_menu_item_2_minutes:
                     Log.i(TAG, "menu: record 2 minutes video");
 
