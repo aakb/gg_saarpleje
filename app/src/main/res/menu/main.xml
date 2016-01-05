@@ -9,6 +9,9 @@
         android:title="@string/record_video">
         <menu>
             <item
+                android:id="@+id/record_video_menu_item_unlimited"
+                android:title="@string/record_unlimited" />
+            <item
                 android:id="@+id/record_video_menu_item_30_seconds"
                 android:title="@string/thirty_seconds" />
             <item
