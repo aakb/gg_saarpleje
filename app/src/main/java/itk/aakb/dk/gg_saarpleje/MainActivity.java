@@ -109,12 +109,6 @@ public class MainActivity extends Activity {
                     recordVideo(30);
 
                     break;
-                case R.id.record_video_menu_item_1_minute:
-                    Log.i(TAG, "menu: record 1 minute video");
-
-                    recordVideo(60);
-
-                    break;
                 case R.id.record_video_menu_item_2_minutes:
                     Log.i(TAG, "menu: record 2 minutes video");
 
@@ -125,6 +119,12 @@ public class MainActivity extends Activity {
                     Log.i(TAG, "menu: record 4 minutes video");
 
                     recordVideo(240);
+
+                    break;
+                case R.id.record_video_menu_item_unlimited:
+                    Log.i(TAG, "menu: record unlimited video");
+
+                    recordVideo(true);
 
                     break;
                 case R.id.finish_menu_item:
@@ -147,6 +147,17 @@ public class MainActivity extends Activity {
     private void takePicture() {
         Intent intent = new Intent(this, CameraActivity.class);
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
+    }
+
+    /**
+     * Launch the record video intent.
+     *
+     * @param unlimited
+     */
+    private void recordVideo(boolean unlimited) {
+        Intent intent = new Intent(this, VideoActivity.class);
+        intent.putExtra("UNLIMITED", unlimited);
+        startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
     }
 
     /**

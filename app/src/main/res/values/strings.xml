@@ -15,4 +15,5 @@
     <string name="one_minute">one minute</string>
     <string name="two_minutes">two minutes</string>
     <string name="four_minutes">four minutes</string>
+    <string name="record_unlimited">custom length</string>
 </resources>
