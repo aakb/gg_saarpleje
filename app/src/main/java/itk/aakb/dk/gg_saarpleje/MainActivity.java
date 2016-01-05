@@ -10,6 +10,12 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.google.android.glass.view.WindowUtils;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.PlanarYUVLuminanceSource;
+import com.google.zxing.Result;
+import com.google.zxing.common.HybridBinarizer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,6 +25,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
+    private static final int QR_REQUEST = 103;
 
     private int imageIndex = 0;
     private String[] imagePaths = new String[2];
@@ -131,6 +138,11 @@ public class MainActivity extends Activity {
                     Log.i(TAG, "menu: finish report");
 
                     break;
+                case R.id.scan_menu_item:
+                    Intent intent = new Intent(this, QRActivity.class);
+                    startActivityForResult(intent, QR_REQUEST);
+
+                    break;
                 default:
                     return true;
             }
@@ -185,6 +197,11 @@ public class MainActivity extends Activity {
         }
         else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
+
+            processVideoWhenReady(data.getStringExtra("path"));
+        }
+        else if (requestCode == QR_REQUEST && resultCode == RESULT_OK) {
+            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
 
             processVideoWhenReady(data.getStringExtra("path"));
         }

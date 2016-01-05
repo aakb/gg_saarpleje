@@ -16,4 +16,5 @@
     <string name="two_minutes">two minutes</string>
     <string name="four_minutes">four minutes</string>
     <string name="record_unlimited">custom length</string>
+    <string name="scan">scan code</string>
 </resources>
