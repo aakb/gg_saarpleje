@@ -2,6 +2,7 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.util.Log;
@@ -201,28 +202,34 @@ public class MainActivity extends Activity {
     private void setStepAccept(int step) {
         Log.i(TAG, "Step " + step +  " has been completed.");
 
-        ImageView imageView = null;
-        TextView textView = null;
+        TextView textCountView = null;
+        TextView textLabelView = null;
 
         if (step == 0) {
-            imageView = (ImageView) findViewById(R.id.image_view_1);
-            textView = (TextView) findViewById(R.id.edit_text_1);
+            textCountView = (TextView) findViewById(R.id.beforeImageNumber);
+            textCountView.setText("1");
+
+            textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
         }
         else if (step == 1) {
-            imageView = (ImageView) findViewById(R.id.image_view_2);
-            textView = (TextView) findViewById(R.id.edit_text_2);
+            textCountView = (TextView) findViewById(R.id.videoNumber);
+            textCountView.setText(imagePaths.length);
+
+            textLabelView = (TextView) findViewById(R.id.videoLabel);
         }
         else if (step == 2) {
-            imageView = (ImageView) findViewById(R.id.image_view_3);
-            textView = (TextView) findViewById(R.id.edit_text_3);
+            textCountView = (TextView) findViewById(R.id.afterImageNumber);
+            textLabelView = (TextView) findViewById(R.id.afterImageLabel);
+
+            textCountView.setText("1");
         }
 
-        if (imageView != null) {
-            imageView.setImageResource(R.drawable.ic_accept);
-            imageView.invalidate();
+        if (textCountView != null && textLabelView != null) {
+            textCountView.setTextColor(Color.WHITE);
+            textLabelView.setTextColor(Color.WHITE);
 
-            textView.setText("2");
-            textView.invalidate();
+            textLabelView.invalidate();
+            textCountView.invalidate();
         }
     }
 
