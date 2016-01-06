@@ -8,12 +8,12 @@
     <string name="record_video">record video</string>
     <string name="countdown_default">...</string>
     <string name="title_activity_video">VideoActivity</string>
-    <string name="progress_before_image">Before images</string>
-    <string name="progress_after_image">After images</string>
+    <string name="progress_before_image">Before image</string>
+    <string name="progress_after_image">After image</string>
     <string name="progress_videos">Videos</string>
     <string name="thirty_seconds">thirty seconds</string>
     <string name="one_minute">one minute</string>
     <string name="two_minutes">two minutes</string>
     <string name="four_minutes">four minutes</string>
-    <string name="patient">Patient:</string>
+    <string name="record_unlimited">custom length</string>
 </resources>
