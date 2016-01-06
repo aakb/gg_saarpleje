@@ -23,8 +23,9 @@ public class MainActivity extends Activity {
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
 
     private int imageIndex = 0;
-    private String[] imagePaths = new String[2];
+    private List<String> beforeImagePaths = new ArrayList<String>();
     private List<String> videoPaths = new ArrayList<String>();
+    private List<String> afterImagePaths = new ArrayList<String>();
 
     /**
      * On create.
@@ -207,13 +208,13 @@ public class MainActivity extends Activity {
 
         if (step == 0) {
             textCountView = (TextView) findViewById(R.id.beforeImageNumber);
-            textCountView.setText("1");
+            textCountView.setText(String.valueOf(beforeImagePaths.size()));
 
             textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
         }
         else if (step == 1) {
             textCountView = (TextView) findViewById(R.id.videoNumber);
-            textCountView.setText(imagePaths.length);
+            textCountView.setText(String.valueOf(videoPaths.size()));
 
             textLabelView = (TextView) findViewById(R.id.videoLabel);
         }
@@ -221,7 +222,7 @@ public class MainActivity extends Activity {
             textCountView = (TextView) findViewById(R.id.afterImageNumber);
             textLabelView = (TextView) findViewById(R.id.afterImageLabel);
 
-            textCountView.setText("1");
+            textCountView.setText(String.valueOf(afterImagePaths.size()));
         }
 
         if (textCountView != null && textLabelView != null) {
@@ -245,15 +246,17 @@ public class MainActivity extends Activity {
             // The picture is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
 
-            imagePaths[imageIndex] = picturePath;
-
-            Log.i(TAG, "Picture " + imageIndex + " ready, with path: " + picturePath);
-
             if (imageIndex == 0) {
+                beforeImagePaths.add(picturePath);
                 setStepAccept(0);
+
+                Log.i(TAG, "Before picture ready, with path: " + picturePath);
             }
             else if (imageIndex == 1) {
+                afterImagePaths.add(picturePath);
                 setStepAccept(2);
+
+                Log.i(TAG, "After picture ready, with path: " + picturePath);
             }
         } else {
             // The file does not exist yet. Before starting the file observer, you
