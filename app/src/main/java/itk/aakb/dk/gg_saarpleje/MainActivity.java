@@ -2,12 +2,14 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.glass.view.WindowUtils;
 
@@ -21,8 +23,9 @@ public class MainActivity extends Activity {
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
 
     private int imageIndex = 0;
-    private String[] imagePaths = new String[2];
+    private List<String> beforeImagePaths = new ArrayList<String>();
     private List<String> videoPaths = new ArrayList<String>();
+    private List<String> afterImagePaths = new ArrayList<String>();
 
     /**
      * On create.
@@ -39,7 +42,7 @@ public class MainActivity extends Activity {
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
         // Set the main activity view.
-        setContentView(R.layout.activity_layout);
+        setContentView(R.layout.activity_layout2);
     }
 
     /**
@@ -200,21 +203,34 @@ public class MainActivity extends Activity {
     private void setStepAccept(int step) {
         Log.i(TAG, "Step " + step +  " has been completed.");
 
-        ImageView imageView = null;
+        TextView textCountView = null;
+        TextView textLabelView = null;
 
         if (step == 0) {
-            imageView = (ImageView) findViewById(R.id.image_view_1);
+            textCountView = (TextView) findViewById(R.id.beforeImageNumber);
+            textCountView.setText(String.valueOf(beforeImagePaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
         }
         else if (step == 1) {
-            imageView = (ImageView) findViewById(R.id.image_view_2);
+            textCountView = (TextView) findViewById(R.id.videoNumber);
+            textCountView.setText(String.valueOf(videoPaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.videoLabel);
         }
         else if (step == 2) {
-            imageView = (ImageView) findViewById(R.id.image_view_3);
+            textCountView = (TextView) findViewById(R.id.afterImageNumber);
+            textLabelView = (TextView) findViewById(R.id.afterImageLabel);
+
+            textCountView.setText(String.valueOf(afterImagePaths.size()));
         }
 
-        if (imageView != null) {
-            imageView.setImageResource(R.drawable.ic_accept);
-            imageView.invalidate();
+        if (textCountView != null && textLabelView != null) {
+            textCountView.setTextColor(Color.WHITE);
+            textLabelView.setTextColor(Color.WHITE);
+
+            textLabelView.invalidate();
+            textCountView.invalidate();
         }
     }
 
@@ -230,15 +246,17 @@ public class MainActivity extends Activity {
             // The picture is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
 
-            imagePaths[imageIndex] = picturePath;
-
-            Log.i(TAG, "Picture " + imageIndex + " ready, with path: " + picturePath);
-
             if (imageIndex == 0) {
+                beforeImagePaths.add(picturePath);
                 setStepAccept(0);
+
+                Log.i(TAG, "Before picture ready, with path: " + picturePath);
             }
             else if (imageIndex == 1) {
+                afterImagePaths.add(picturePath);
                 setStepAccept(2);
+
+                Log.i(TAG, "After picture ready, with path: " + picturePath);
             }
         } else {
             // The file does not exist yet. Before starting the file observer, you
