@@ -4,53 +4,110 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
-import com.google.zxing.LuminanceSource;
+import com.google.zxing.DecodeHintType;
 import com.google.zxing.MultiFormatReader;
-import com.google.zxing.NotFoundException;
 import com.google.zxing.PlanarYUVLuminanceSource;
+import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Map;
 
 public class QRActivity extends Activity {
     private static final String TAG = "QRActivity";
 
     private Camera camera;
-    private CameraPreview cameraPreview;
-    private TextView countdownText;
+    private QRPreview qrPreview;
 
-    private Timer timer;
-    private int timerExecutions = 0;
+    private static final int   SCANS_PER_SEC = 3;
+    private int                framesSinceLastScan = 0;
+    private int                widthPixels = 640;
+    private int                heightPixels = 360;
+    private MultiFormatReader  multiFormatReader = new MultiFormatReader();
 
-    private MultiFormatReader mMultiFormatReader;
+    private Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
+        /**
+         * Preview frame
+         *
+         * @param data preview data
+         * @param camera the camera
+         */
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            Camera.Size size = camera.getParameters().getPreviewSize();
+
+            // Only scan every 10th frame
+            if( ++framesSinceLastScan % (30 / SCANS_PER_SEC) == 0 ) {
+                Log.i(TAG, "trigger");
+                scan(data, size.width, size.height);
+                framesSinceLastScan = 0;
+            }
+        }
+
+        /**
+         * Scan the data for a QR code.
+         *
+         * @param data
+         * @param width
+         * @param height
+         */
+        private void scan(byte[] data, int width, int height) {
+            Log.d(TAG, "scan");
+            PlanarYUVLuminanceSource luminanceSource = new PlanarYUVLuminanceSource(data,
+                    width, height, 0, 0, width, height, false);
+            // new ScanTask().execute(luminanceSource); // uncomment to use ScanTask
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
+            Result result = null;
+
+            Map<DecodeHintType, Object> tmpHintsMap = new EnumMap<DecodeHintType, Object>(
+                    DecodeHintType.class);
+            tmpHintsMap.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+            List<BarcodeFormat> formats = new ArrayList<>();
+            formats.add(BarcodeFormat.QR_CODE);
+            tmpHintsMap.put(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+            try {
+                result = multiFormatReader.decode(bitmap, tmpHintsMap);
+            } catch (ReaderException re) {
+                Log.e(TAG, re.toString());
+            } finally {
+                multiFormatReader.reset();
+            }
+            if (result != null) {
+                Log.i(TAG, "Result: " + result.getText());
+
+                // Add path to file as result
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("result", result.getText());
+                setResult(RESULT_OK, returnIntent);
+
+                finish();
+            }
+        }
+
+    };
 
     /**
      * On create.
      *
-     * @param savedInstanceState
+     * @param savedInstanceState Saved Instance State
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mMultiFormatReader = new MultiFormatReader();
-
         Log.i(TAG, "Launching activity");
 
         setContentView(R.layout.activity_camera);
-
-        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
@@ -61,45 +118,16 @@ public class QRActivity extends Activity {
         camera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity.
-        cameraPreview = new CameraPreview(this, camera);
+        qrPreview = new QRPreview(this, camera, previewCallback);
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(cameraPreview);
-
-        // Reset timer executions.
-        timerExecutions = 0;
-
-        countdownText.setText("3");
-
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                timerExecutions++;
-
-                Log.i(TAG, "" + timerExecutions);
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        countdownText.setText("" + (3 - timerExecutions));
-                    }
-                });
-
-                if (timerExecutions >= 3) {
-                    Log.i(TAG, "timer cancel, take picture");
-                    cancel();
-                    // Take picture
-                    camera.takePicture(null, null, mPicture);
-                }
-            }
-        }, 2000, 1000);
+        preview.addView(qrPreview);
     }
 
     /**
      * A safe way to get an instance of the Camera object.
      */
     public static Camera getCameraInstance() {
-        Camera c = null;
+        Camera c;
 
         Log.i(TAG, "getting camera instance...");
         try {
@@ -107,8 +135,6 @@ public class QRActivity extends Activity {
         } catch (Exception e) {
             Log.e(TAG, "could not getCameraInstance");
             throw e;
-            // Camera is not available (in use or does not exist)
-            // @TODO: Throw Toast!
         }
 
         return c; // returns null if camera is unavailable
@@ -118,52 +144,8 @@ public class QRActivity extends Activity {
      * Check if this device has a camera
      */
     private boolean checkCameraHardware(Context context) {
-        if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            // this device has a camera
-            return true;
-        } else {
-            // no camera on this device
-            return false;
-        }
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
-
-    /**
-     * Picture callback.
-     */
-    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
-
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            Camera.Size size = camera.getParameters().getPreviewSize();
-            PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data, size.width, size.height, 0, 0,
-                    size.width, size.height, false);
-            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
-            Result result;
-
-            releaseCamera();
-
-            try {
-                result = mMultiFormatReader.decode(bitmap, null);
-                if (result != null) {
-                    Log.i(TAG, result.getText());
-                }
-
-                // Add path to file as result
-                Intent returnIntent = new Intent();
-                returnIntent.putExtra("result", result.getText());
-                setResult(RESULT_OK, returnIntent);
-
-                // Finish activity
-                finish();
-            } catch (NotFoundException e) {
-                Log.e(TAG, e.toString());
-
-                // Finish activity
-                finish();
-            }
-        }
-    };
 
     /**
      * On pause.
@@ -189,7 +171,7 @@ public class QRActivity extends Activity {
     private void releaseCamera() {
         if (camera != null) {
             camera.stopPreview();
-            cameraPreview.release();
+            qrPreview.release();
             camera.release();        // release the camera for other applications
             camera = null;
         }
