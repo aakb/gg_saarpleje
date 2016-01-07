@@ -8,7 +8,6 @@ import android.os.FileObserver;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.glass.view.WindowUtils;
@@ -22,10 +21,8 @@ public class MainActivity extends Activity {
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
 
-    private int imageIndex = 0;
-    private List<String> beforeImagePaths = new ArrayList<String>();
+    private List<String> imagePaths = new ArrayList<String>();
     private List<String> videoPaths = new ArrayList<String>();
-    private List<String> afterImagePaths = new ArrayList<String>();
 
     /**
      * On create.
@@ -42,7 +39,7 @@ public class MainActivity extends Activity {
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
         // Set the main activity view.
-        setContentView(R.layout.activity_layout2);
+        setContentView(R.layout.activity_layout);
     }
 
     /**
@@ -77,7 +74,7 @@ public class MainActivity extends Activity {
 
     /**
      * On menu item selected.
-     *
+     * <p/>
      * Processes the voice commands from the main menu.
      *
      * @param featureId
@@ -91,14 +88,6 @@ public class MainActivity extends Activity {
                 case R.id.take_before_image_menu_item:
                     Log.i(TAG, "menu: take before image");
 
-                    imageIndex = 0;
-                    takePicture();
-
-                    break;
-                case R.id.take_after_image_menu_item:
-                    Log.i(TAG, "menu: take after image");
-
-                    imageIndex = 1;
                     takePicture();
 
                     break;
@@ -176,7 +165,7 @@ public class MainActivity extends Activity {
 
     /**
      * On activity result.
-     *
+     * <p/>
      * When an intent returns, it is intercepted in this method.
      */
     @Override
@@ -185,8 +174,7 @@ public class MainActivity extends Activity {
             Log.i(TAG, "Received image: " + data.getStringExtra("path"));
 
             processPictureWhenReady(data.getStringExtra("path"));
-        }
-        else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
+        } else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
             processVideoWhenReady(data.getStringExtra("path"));
@@ -201,28 +189,21 @@ public class MainActivity extends Activity {
      * @param step that step that has been completed.
      */
     private void setStepAccept(int step) {
-        Log.i(TAG, "Step " + step +  " has been completed.");
+        Log.i(TAG, "Step " + step + " has been completed.");
 
         TextView textCountView = null;
         TextView textLabelView = null;
 
         if (step == 0) {
             textCountView = (TextView) findViewById(R.id.beforeImageNumber);
-            textCountView.setText(String.valueOf(beforeImagePaths.size()));
+            textCountView.setText(String.valueOf(imagePaths.size()));
 
             textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
-        }
-        else if (step == 1) {
+        } else if (step == 1) {
             textCountView = (TextView) findViewById(R.id.videoNumber);
             textCountView.setText(String.valueOf(videoPaths.size()));
 
             textLabelView = (TextView) findViewById(R.id.videoLabel);
-        }
-        else if (step == 2) {
-            textCountView = (TextView) findViewById(R.id.afterImageNumber);
-            textLabelView = (TextView) findViewById(R.id.afterImageLabel);
-
-            textCountView.setText(String.valueOf(afterImagePaths.size()));
         }
 
         if (textCountView != null && textLabelView != null) {
@@ -246,18 +227,10 @@ public class MainActivity extends Activity {
             // The picture is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
 
-            if (imageIndex == 0) {
-                beforeImagePaths.add(picturePath);
-                setStepAccept(0);
+            imagePaths.add(picturePath);
+            setStepAccept(0);
 
-                Log.i(TAG, "Before picture ready, with path: " + picturePath);
-            }
-            else if (imageIndex == 1) {
-                afterImagePaths.add(picturePath);
-                setStepAccept(2);
-
-                Log.i(TAG, "After picture ready, with path: " + picturePath);
-            }
+            Log.i(TAG, "Before picture ready, with path: " + picturePath);
         } else {
             // The file does not exist yet. Before starting the file observer, you
             // can update your UI to let the user know that the application is

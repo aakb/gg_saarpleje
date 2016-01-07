@@ -1,87 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center">
+    android:layout_height="match_parent">
+
 
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
+        android:layout_marginLeft="40px"
+        android:layout_marginRight="40px"
+        android:layout_marginTop="60px"
+        android:layout_gravity="center">
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:id="@+id/menu_item_1">
-
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/image_view_1"
-                android:src="@drawable/ic_stop" />
+            android:layout_height="wrap_content">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/edit_text_1"
-                android:textSize="28dp"
-                android:layout_weight="2"
-                android:text="@string/progress_before_image"
-                android:layout_gravity="center_vertical" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/patient"
+                android:id="@+id/patientLabel" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text=""
+                android:id="@+id/patientIdentifier" />
         </LinearLayout>
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/menu_item_2">
+            android:layout_height="wrap_content">
 
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/image_view_2"
-                android:src="@drawable/ic_stop" />
+            <TextView
+                android:layout_width="50px"
+                android:layout_height="match_parent"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="-"
+                android:id="@+id/beforeImageNumber"
+                android:gravity="right"
+                android:textColor="#898989" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/edit_text_2"
-                android:textSize="28dp"
-                android:layout_weight="2"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/progress_image"
+                android:id="@+id/beforeImageLabel"
+                android:layout_marginLeft="10px"
+                android:textColor="#898989" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="50px"
+                android:layout_height="match_parent"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="-"
+                android:id="@+id/videoNumber"
+                android:layout_gravity="right"
+                android:gravity="right"
+                android:textColor="#898989" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="@string/progress_videos"
-                android:layout_gravity="center_vertical" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:id="@+id/menu_item_3">
-
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:id="@+id/image_view_3"
-                android:src="@drawable/ic_stop" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/edit_text_3"
-                android:textSize="28dp"
-                android:layout_weight="2"
-                android:text="@string/progress_after_image"
-                android:layout_gravity="center_vertical" />
+                android:id="@+id/videoLabel"
+                android:layout_marginLeft="10px"
+                android:textColor="#898989" />
         </LinearLayout>
 
     </LinearLayout>
+
 
 </LinearLayout>

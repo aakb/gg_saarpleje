@@ -67,7 +67,7 @@ public class VideoActivity extends Activity {
 
         Log.i(TAG, "Launching activity");
 
-        setContentView(R.layout.activity_camera);
+        setContentView(R.layout.activity_camera_video);
 
         countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
@@ -103,7 +103,7 @@ public class VideoActivity extends Activity {
     }
 
     private void launchUnlimitedVideo() {
-        countdownText.setText("0");
+        countdownText.setText("0 sec");
 
         // Catch all errors, and release camera on error.
         try {
@@ -186,7 +186,7 @@ public class VideoActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    countdownText.setText("" + timerExecutions);
+                                    countdownText.setText(timerExecutions + " sec");
                                 }
                             });
                         }
@@ -212,7 +212,7 @@ public class VideoActivity extends Activity {
      * Start process to take 10 s video.
      */
     private void launchAutoVideo() {
-        countdownText.setText("" + videoLength);
+        countdownText.setText(videoLength + " sec");
 
         // Catch all errors, and release camera on error.
         try {
@@ -293,7 +293,7 @@ public class VideoActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    countdownText.setText("" + (videoLength - timerExecutions));
+                                    countdownText.setText((videoLength - timerExecutions) + " sec");
                                 }
                             });
 
