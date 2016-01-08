@@ -85,7 +85,7 @@ public class MainActivity extends Activity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
             switch (item.getItemId()) {
-                case R.id.take_before_image_menu_item:
+                case R.id.take_image_menu_item:
                     Log.i(TAG, "menu: take before image");
 
                     takePicture();
@@ -122,6 +122,10 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
+                    break;
+                case R.id.confirm_cancel:
+                    Log.i(TAG, "menu: Confirm: cancel and exit");
+                    finish();
                     break;
                 default:
                     return true;

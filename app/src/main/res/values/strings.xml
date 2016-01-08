@@ -3,8 +3,7 @@
     <string name="voice_command_start_program">start program</string>
     <string name="voice_command_menu">Say \"Okay, Glass\" to open menu</string>
     <string name="finish">finish report</string>
-    <string name="take_before_image">take before image</string>
-    <string name="take_after_image">take after image</string>
+    <string name="take_image">take image</string>
     <string name="record_video">record video</string>
     <string name="countdown_default">...</string>
     <string name="title_activity_video">VideoActivity</string>
@@ -16,4 +15,7 @@
     <string name="four_minutes">four minutes</string>
     <string name="record_unlimited">custom length</string>
     <string name="patient">Patient:</string>
+    <string name="cancel">cancel and exit</string>
+    <string name="confirm_cancel">yes</string>
+    <string name="abort_cancel">no</string>
 </resources>
