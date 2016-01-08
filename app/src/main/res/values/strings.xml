@@ -16,4 +16,10 @@
     <string name="two_minutes">two minutes</string>
     <string name="four_minutes">four minutes</string>
     <string name="record_unlimited">custom length</string>
+    <string name="finish_report">Finish report</string>
+    <string name="no_media_files">No media files</string>
+    <plurals name="uploading_n_files">
+        <item quantity="one">Uploading 1 file</item>
+        <item quantity="other">Uploading %d</item>
+    </plurals>
 </resources>

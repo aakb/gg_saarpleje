@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
+    private static final int FINISH_REPORT_REQUEST = 103;
 
     private int imageIndex = 0;
     private String[] imagePaths = new String[2];
@@ -130,6 +131,8 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
+                    finishReport("googleglass@mikkelricky.dk", null);
+
                     break;
                 default:
                     return true;
@@ -169,6 +172,17 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, VideoActivity.class);
         intent.putExtra("SECONDS", duration);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
+    }
+
+    /**
+     * Launch the finish report intent.
+     */
+    private void finishReport(String email, String name) {
+        Intent intent = new Intent(this, ReportActivity.class);
+        intent
+                .putExtra("recipient_email", email)
+                .putExtra("recipient_name", name);
+        startActivityForResult(intent, FINISH_REPORT_REQUEST);
     }
 
     /**
