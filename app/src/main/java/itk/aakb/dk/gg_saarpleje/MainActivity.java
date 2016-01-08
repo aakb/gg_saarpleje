@@ -2,12 +2,13 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.FileObserver;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.glass.view.WindowUtils;
 
@@ -21,8 +22,7 @@ public class MainActivity extends Activity {
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int FINISH_REPORT_REQUEST = 103;
 
-    private int imageIndex = 0;
-    private String[] imagePaths = new String[2];
+    private List<String> imagePaths = new ArrayList<String>();
     private List<String> videoPaths = new ArrayList<String>();
 
     /**
@@ -75,7 +75,7 @@ public class MainActivity extends Activity {
 
     /**
      * On menu item selected.
-     *
+     * <p/>
      * Processes the voice commands from the main menu.
      *
      * @param featureId
@@ -86,17 +86,9 @@ public class MainActivity extends Activity {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
             switch (item.getItemId()) {
-                case R.id.take_before_image_menu_item:
+                case R.id.take_image_menu_item:
                     Log.i(TAG, "menu: take before image");
 
-                    imageIndex = 0;
-                    takePicture();
-
-                    break;
-                case R.id.take_after_image_menu_item:
-                    Log.i(TAG, "menu: take after image");
-
-                    imageIndex = 1;
                     takePicture();
 
                     break;
@@ -133,6 +125,10 @@ public class MainActivity extends Activity {
 
                     finishReport("googleglass@mikkelricky.dk", null);
 
+                    break;
+                case R.id.confirm_cancel:
+                    Log.i(TAG, "menu: Confirm: cancel and exit");
+                    finish();
                     break;
                 default:
                     return true;
@@ -187,7 +183,7 @@ public class MainActivity extends Activity {
 
     /**
      * On activity result.
-     *
+     * <p/>
      * When an intent returns, it is intercepted in this method.
      */
     @Override
@@ -196,8 +192,7 @@ public class MainActivity extends Activity {
             Log.i(TAG, "Received image: " + data.getStringExtra("path"));
 
             processPictureWhenReady(data.getStringExtra("path"));
-        }
-        else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
+        } else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
             processVideoWhenReady(data.getStringExtra("path"));
@@ -212,23 +207,29 @@ public class MainActivity extends Activity {
      * @param step that step that has been completed.
      */
     private void setStepAccept(int step) {
-        Log.i(TAG, "Step " + step +  " has been completed.");
+        Log.i(TAG, "Step " + step + " has been completed.");
 
-        ImageView imageView = null;
+        TextView textCountView = null;
+        TextView textLabelView = null;
 
         if (step == 0) {
-            imageView = (ImageView) findViewById(R.id.image_view_1);
-        }
-        else if (step == 1) {
-            imageView = (ImageView) findViewById(R.id.image_view_2);
-        }
-        else if (step == 2) {
-            imageView = (ImageView) findViewById(R.id.image_view_3);
+            textCountView = (TextView) findViewById(R.id.beforeImageNumber);
+            textCountView.setText(String.valueOf(imagePaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
+        } else if (step == 1) {
+            textCountView = (TextView) findViewById(R.id.videoNumber);
+            textCountView.setText(String.valueOf(videoPaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.videoLabel);
         }
 
-        if (imageView != null) {
-            imageView.setImageResource(R.drawable.ic_accept);
-            imageView.invalidate();
+        if (textCountView != null && textLabelView != null) {
+            textCountView.setTextColor(Color.WHITE);
+            textLabelView.setTextColor(Color.WHITE);
+
+            textLabelView.invalidate();
+            textCountView.invalidate();
         }
     }
 
@@ -244,16 +245,10 @@ public class MainActivity extends Activity {
             // The picture is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
 
-            imagePaths[imageIndex] = picturePath;
+            imagePaths.add(picturePath);
+            setStepAccept(0);
 
-            Log.i(TAG, "Picture " + imageIndex + " ready, with path: " + picturePath);
-
-            if (imageIndex == 0) {
-                setStepAccept(0);
-            }
-            else if (imageIndex == 1) {
-                setStepAccept(2);
-            }
+            Log.i(TAG, "Before picture ready, with path: " + picturePath);
         } else {
             // The file does not exist yet. Before starting the file observer, you
             // can update your UI to let the user know that the application is

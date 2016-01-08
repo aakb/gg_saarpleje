@@ -43,7 +43,7 @@ public class CameraActivity extends Activity {
 
         Log.i(TAG, "Launching activity");
 
-        setContentView(R.layout.activity_camera);
+        setContentView(R.layout.activity_camera_countdown);
 
         countdownText = (TextView) findViewById(R.id.text_camera_countdown);
 
