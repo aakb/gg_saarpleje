@@ -34,13 +34,14 @@ public class MainActivity extends Activity {
 
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ArrayList<String> videoPaths = new ArrayList<>();
-    private ArrayList<String> audioPaths = new ArrayList<String>();
+    private ArrayList<String> audioPaths = new ArrayList<>();
 
     private String patient = null;
     private String receiver = null;
 
     static final String STATE_VIDEOS = "videos";
     static final String STATE_PICTURES = "pictures";
+    static final String STATE_MEMOS = "memos";
     static final String STATE_PATIENT = "patient";
     static final String STATE_RECEIVER = "receiver";
 
@@ -51,6 +52,7 @@ public class MainActivity extends Activity {
         // Save the user's current game state
         savedInstanceState.putStringArrayList(STATE_VIDEOS, videoPaths);
         savedInstanceState.putStringArrayList(STATE_PICTURES, imagePaths);
+        savedInstanceState.putStringArrayList(STATE_MEMOS, audioPaths);
         savedInstanceState.putString(STATE_PATIENT, patient);
         savedInstanceState.putString(STATE_RECEIVER, receiver);
 
@@ -322,8 +324,9 @@ public class MainActivity extends Activity {
         Log.i(TAG, "Restored imagePaths: " + imagePaths);
         Log.i(TAG, "Restored videoPaths: " + videoPaths);
 
-        updateTextField(R.id.beforeImageNumber, String.valueOf(imagePaths.size()));
+        updateTextField(R.id.imageNumber, String.valueOf(imagePaths.size()));
         updateTextField(R.id.videoNumber, String.valueOf(videoPaths.size()));
+        updateTextField(R.id.memoNumber, String.valueOf((audioPaths.size())));
         updateTextField(R.id.receiverIdentifier, receiver);
         updateTextField(R.id.patientIdentifier, patient);
     }
@@ -458,7 +461,7 @@ public class MainActivity extends Activity {
         TextView textLabelView = null;
 
         if (step == 0) {
-            textCountView = (TextView) findViewById(R.id.beforeImageNumber);
+            textCountView = (TextView) findViewById(R.id.imageNumber);
             textCountView.setText(String.valueOf(imagePaths.size()));
         }
         else if (step == 1) {

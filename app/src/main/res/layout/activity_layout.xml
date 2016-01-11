@@ -63,7 +63,7 @@
                 android:layout_height="match_parent"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="-"
-                android:id="@+id/beforeImageNumber"
+                android:id="@+id/imageNumber"
                 android:gravity="right"
                 android:textColor="#898989" />
 

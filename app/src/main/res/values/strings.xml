@@ -17,8 +17,8 @@
     <string name="record_unlimited">Custom length</string>
     <string name="patient">Patient:</string>
     <string name="receiver">Receiver:</string>
-    <string name="scan_patient">scan patient</string>
-    <string name="add_receiver">add receiver</string>
+    <string name="scan_patient">Scan patient</string>
+    <string name="add_receiver">Add email</string>
     <string name="cancel">Cancel and exit</string>
     <string name="confirm_cancel">Yes</string>
     <string name="abort_cancel">No</string>
