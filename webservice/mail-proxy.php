@@ -15,13 +15,21 @@ $smtp = (object)[
   'port' => 1025,
 ];
 
+// Google smtp
 $smtp = (object)[
  'host' => 'tls://smtp.gmail.com',
  'port' => '465',
  'auth' => true,
- 'username' => 'googleglass@mikkelricky.dk',
- 'password' => 'dmlg gjkm azab awky',
+ 'username' => '', // Some gmail username
+ 'password' => '', // https://security.google.com/settings/security/apppasswords
 ];
+
+if (isset($smtp->username) && empty($smtp->username)) {
+  die('No smtp username defined');
+}
+if (isset($smtp->password) && empty($smtp->password)) {
+  die('No smtp password defined');
+}
 
 $address = '127.0.0.1';
 $port = 10000;
