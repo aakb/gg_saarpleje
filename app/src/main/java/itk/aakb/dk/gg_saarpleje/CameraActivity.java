@@ -45,7 +45,7 @@ public class CameraActivity extends Activity {
 
         setContentView(R.layout.activity_camera_countdown);
 
-        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
+        countdownText = (TextView) findViewById(R.id.text_camera_duration);
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
