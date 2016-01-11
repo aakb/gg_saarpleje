@@ -107,7 +107,7 @@ public class QRActivity extends Activity {
 
         Log.i(TAG, "Launching activity");
 
-        setContentView(R.layout.activity_camera);
+        setContentView(R.layout.activity_qr);
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
