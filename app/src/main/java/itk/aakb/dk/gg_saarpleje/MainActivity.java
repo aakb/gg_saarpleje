@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
     private static final String TAG = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
+    private static final int QR_REQUEST = 103;
 
     private List<String> imagePaths = new ArrayList<String>();
     private List<String> videoPaths = new ArrayList<String>();
@@ -126,6 +127,12 @@ public class MainActivity extends Activity {
                 case R.id.confirm_cancel:
                     Log.i(TAG, "menu: Confirm: cancel and exit");
                     finish();
+
+                    break;
+                case R.id.scan_menu_item:
+                    Intent intent = new Intent(this, QRActivity.class);
+                    startActivityForResult(intent, QR_REQUEST);
+
                     break;
                 default:
                     return true;
@@ -180,6 +187,11 @@ public class MainActivity extends Activity {
             processPictureWhenReady(data.getStringExtra("path"));
         } else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
+
+            processVideoWhenReady(data.getStringExtra("path"));
+        }
+        else if (requestCode == QR_REQUEST && resultCode == RESULT_OK) {
+            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
 
             processVideoWhenReady(data.getStringExtra("path"));
         }

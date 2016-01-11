@@ -18,4 +18,5 @@
     <string name="cancel">cancel and exit</string>
     <string name="confirm_cancel">yes</string>
     <string name="abort_cancel">no</string>
+    <string name="scan">scan code</string>
 </resources>
