@@ -15,8 +15,10 @@
     <string name="four_minutes">four minutes</string>
     <string name="record_unlimited">custom length</string>
     <string name="patient">Patient:</string>
+    <string name="receiver">Receiver:</string>
     <string name="cancel">cancel and exit</string>
     <string name="confirm_cancel">yes</string>
     <string name="abort_cancel">no</string>
-    <string name="scan">scan code</string>
+    <string name="scan_patient">scan patient</string>
+    <string name="add_receiver">add receiver</string>
 </resources>

@@ -171,6 +171,7 @@ public class QRActivity extends Activity {
     private void releaseCamera() {
         if (camera != null) {
             camera.stopPreview();
+            camera.setPreviewCallback(null);
             qrPreview.release();
             camera.release();        // release the camera for other applications
             camera = null;

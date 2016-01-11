@@ -26,9 +26,6 @@
         </menu>
     </item>
     <item
-        android:id="@+id/scan_menu_item"
-        android:title="@string/scan" />
-    <item
         android:id="@+id/finish_menu_item"
         android:title="@string/finish" />
     <item
