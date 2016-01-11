@@ -430,7 +430,9 @@ public class VideoActivity extends Activity {
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
-        mSensorManager.unregisterListener(mSensorEventListener);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
+        }
     }
 
     /**
@@ -444,7 +446,9 @@ public class VideoActivity extends Activity {
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
-        mSensorManager.unregisterListener(mSensorEventListener);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
+        }
     }
 
     @Override
@@ -484,7 +488,7 @@ public class VideoActivity extends Activity {
     private static File getOutputVideoFile() {
         // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {

@@ -14,8 +14,8 @@
     <string name="two_minutes">two minutes</string>
     <string name="four_minutes">four minutes</string>
     <string name="record_unlimited">custom length</string>
-    <string name="patient">Patient:</string>
-    <string name="receiver">Receiver:</string>
+    <string name="patient">Patient: </string>
+    <string name="receiver">Receiver: </string>
     <string name="cancel">cancel and exit</string>
     <string name="confirm_cancel">yes</string>
     <string name="abort_cancel">no</string>

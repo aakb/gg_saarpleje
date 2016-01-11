@@ -1,9 +1,12 @@
 package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.FileObserver;
 import android.util.Log;
 import android.view.Menu;
@@ -14,33 +17,54 @@ import android.widget.Toast;
 import com.google.android.glass.view.WindowUtils;
 
 import org.apache.commons.validator.routines.EmailValidator;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class MainActivity extends Activity {
-    private static final String TAG = "saarpleje";
+    private static final String TAG = "saarpleje MainActivity";
+    private static final String FILE_DIRECTORY = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int SCAN_PATIENT_REQUEST = 103;
     private static final int SCAN_RECEIVER_REQUEST = 104;
     private static final int FINISH_REPORT_REQUEST = 105;
 
-    private List<String> imagePaths = new ArrayList<>();
-    private List<String> videoPaths = new ArrayList<>();
+    private ArrayList<String> imagePaths = new ArrayList<>();
+    private ArrayList<String> videoPaths = new ArrayList<>();
     private String patient = null;
     private String receiver = null;
+
+    static final String STATE_VIDEOS = "videos";
+    static final String STATE_PICTURES = "pictures";
+    static final String STATE_PATIENT = "patient";
+    static final String STATE_RECEIVER = "receiver";
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        Log.i(TAG, "onSaveInstanceState");
+
+        // Save the user's current game state
+        savedInstanceState.putStringArrayList(STATE_VIDEOS, videoPaths);
+        savedInstanceState.putStringArrayList(STATE_PICTURES, imagePaths);
+        savedInstanceState.putString(STATE_PATIENT, patient);
+        savedInstanceState.putString(STATE_RECEIVER, receiver);
+
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
 
     /**
      * On create.
      *
-     * @param bundle the bundle
+     * @param savedInstanceState the bundle
      */
     @Override
-    protected void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         // Requests a voice menu on this activity. As for any other
         // window feature, be sure to request this before
@@ -49,6 +73,26 @@ public class MainActivity extends Activity {
 
         // Set the main activity view.
         setContentView(R.layout.activity_layout);
+
+        // for debug: list all files in directory
+        // @TODO: remove
+        getDirectoryListing();
+
+        // Check whether we're recreating a previously destroyed instance
+        if (savedInstanceState != null) {
+            Log.i(TAG, "Restoring savedInstance");
+
+            // Restore state members from saved instance
+            imagePaths = savedInstanceState.getStringArrayList(STATE_PICTURES);
+            videoPaths = savedInstanceState.getStringArrayList(STATE_VIDEOS);
+            patient = savedInstanceState.getString(STATE_PATIENT);
+            receiver = savedInstanceState.getString(STATE_RECEIVER);
+        } else {
+            Log.i(TAG, "Restoring state");
+
+            // Probably initialize members with default values for a new instance
+            restoreState();
+        }
     }
 
     /**
@@ -156,6 +200,10 @@ public class MainActivity extends Activity {
                     break;
                 case R.id.confirm_cancel:
                     Log.i(TAG, "menu: Confirm: cancel and exit");
+
+                    cleanDirectory();
+                    deleteState();
+
                     finish();
 
                     break;
@@ -214,11 +262,119 @@ public class MainActivity extends Activity {
      */
     private void finishReport(String email, String name, String subject) {
         Intent intent = new Intent(this, ReportActivity.class);
-        intent
-                .putExtra("recipient_email", email)
-                .putExtra("recipient_name", name)
-                .putExtra("subject", subject);
+        intent.putExtra("recipient_email", email)
+              .putExtra("recipient_name", name)
+              .putExtra("subject", subject);
         startActivityForResult(intent, FINISH_REPORT_REQUEST);
+    }
+
+    /*
+     * Save state.
+     */
+    private void saveState() {
+        String serializedVideoPaths = (new JSONArray(videoPaths)).toString();
+        String serializedImagePaths = (new JSONArray(imagePaths)).toString();
+
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(STATE_VIDEOS, serializedVideoPaths);
+        editor.putString(STATE_PICTURES, serializedImagePaths);
+        editor.putString(STATE_PATIENT, patient);
+        editor.putString(STATE_RECEIVER, receiver);
+        editor.apply();
+    }
+
+    /**
+     * Remove state.
+     */
+    private void deleteState() {
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.clear();
+        editor.apply();
+    }
+
+    /**
+     * Restore state.
+     */
+    private void restoreState() {
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        patient = sharedPref.getString(STATE_PATIENT, null);
+        receiver = sharedPref.getString(STATE_RECEIVER, null);
+        String serializedVideoPaths = sharedPref.getString(STATE_VIDEOS, "[]");
+        String serializedImagePaths = sharedPref.getString(STATE_PICTURES, "[]");
+
+        imagePaths = new ArrayList<>();
+        videoPaths = new ArrayList<>();
+
+        try {
+            JSONArray jsonArray = new JSONArray(serializedVideoPaths);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                videoPaths.add(jsonArray.getString(i));
+            }
+
+            jsonArray = new JSONArray(serializedImagePaths);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                imagePaths.add(jsonArray.getString(i));
+            }
+        }
+        catch (JSONException e) {
+            // ignore
+        }
+
+        Log.i(TAG, "Restored patient: " + patient);
+        Log.i(TAG, "Restored receiver: " + receiver);
+        Log.i(TAG, "Restored imagePaths: " + imagePaths);
+        Log.i(TAG, "Restored videoPaths: " + videoPaths);
+
+        updateTextField(R.id.beforeImageNumber, String.valueOf(imagePaths.size()));
+        updateTextField(R.id.videoNumber, String.valueOf(videoPaths.size()));
+        updateTextField(R.id.receiverIdentifier, receiver);
+        updateTextField(R.id.patientIdentifier, patient);
+    }
+
+    /**
+     * Empty the directory.
+     */
+    private void cleanDirectory() {
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
+        Log.i(TAG, "Cleaning directory: " + f.getAbsolutePath());
+
+        File[] files = f.listFiles();
+        if (files != null && files.length > 0) {
+            for (File inFile : files) {
+                boolean success = inFile.delete();
+                if (!success) {
+                    Log.e(TAG, "file: " + inFile + " was not deleted (continuing).");
+                }
+            }
+        }
+        else {
+            Log.i(TAG, "directory empty or does not exist.");
+        }
+    }
+
+    /**
+     * List all files in FILE_DIRECTORY.
+     */
+    private void getDirectoryListing() {
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
+        Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
+
+        File[] files = f.listFiles();
+        if (files != null && files.length > 0) {
+            for (File inFile : files) {
+                if (inFile.isDirectory()) {
+                    Log.i(TAG, inFile + "(dir)");
+                }
+                else {
+                    Log.i(TAG, "" + inFile);
+                }
+            }
+        }
+        else {
+            Log.i(TAG, "directory empty or does not exist.");
+        }
     }
 
     /**
@@ -243,6 +399,8 @@ public class MainActivity extends Activity {
 
             patient = data.getStringExtra("result");
 
+            saveState();
+
             TextView text = (TextView) findViewById(R.id.patientIdentifier);
             text.setText(patient);
             text.invalidate();
@@ -257,6 +415,8 @@ public class MainActivity extends Activity {
             if (valid) {
                 receiver = s;
 
+                saveState();
+
                 TextView text = (TextView) findViewById(R.id.receiverIdentifier);
                 text.setText(receiver);
                 text.invalidate();
@@ -268,6 +428,17 @@ public class MainActivity extends Activity {
 
         super.onActivityResult(requestCode, resultCode, data);
     }
+
+    /**
+     * Update a ui text view.
+     * @param id id of the text view
+     * @param value value to assign
+     */
+    private void updateTextField(int id, String value) {
+        TextView v = (TextView) findViewById(id);
+        v.setText(value);
+        v.invalidate();
+   }
 
     /**
      * Update the UI when a step has been completed.
@@ -283,22 +454,19 @@ public class MainActivity extends Activity {
         if (step == 0) {
             textCountView = (TextView) findViewById(R.id.beforeImageNumber);
             textCountView.setText(String.valueOf(imagePaths.size()));
-
-            textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
         }
         else if (step == 1) {
             textCountView = (TextView) findViewById(R.id.videoNumber);
             textCountView.setText(String.valueOf(videoPaths.size()));
-
-            textLabelView = (TextView) findViewById(R.id.videoLabel);
         }
 
-        if (textCountView != null && textLabelView != null) {
+        if (textCountView != null) {
             textCountView.setTextColor(Color.WHITE);
-            textLabelView.setTextColor(Color.WHITE);
-
-            textLabelView.invalidate();
             textCountView.invalidate();
+        }
+        if (textLabelView != null) {
+            textLabelView.setTextColor(Color.WHITE);
+            textLabelView.invalidate();
         }
     }
 
@@ -315,6 +483,9 @@ public class MainActivity extends Activity {
             // saved to disc.
 
             imagePaths.add(picturePath);
+
+            saveState();
+
             setStepAccept(0);
 
             Log.i(TAG, "Before picture ready, with path: " + picturePath);
@@ -367,6 +538,8 @@ public class MainActivity extends Activity {
             // The video is ready. We are not gonna work with it, but now we know it has been
             // saved to disc.
             videoPaths.add(videoPath);
+
+            saveState();
 
             Log.i(TAG, "Video ready, with path: " + videoPath);
 
