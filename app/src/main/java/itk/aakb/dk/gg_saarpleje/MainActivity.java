@@ -30,9 +30,12 @@ public class MainActivity extends Activity {
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int SCAN_PATIENT_REQUEST = 103;
     private static final int SCAN_RECEIVER_REQUEST = 104;
+    private static final int RECORD_MEMO_REQUEST = 105;
 
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ArrayList<String> videoPaths = new ArrayList<>();
+    private ArrayList<String> audioPaths = new ArrayList<String>();
+
     private String patient = null;
     private String receiver = null;
 
@@ -190,6 +193,12 @@ public class MainActivity extends Activity {
                     recordVideo(true);
 
                     break;
+                case R.id.record_memo_menu_item:
+                    Log.i(TAG, "menu: record memo");
+
+                    recordMemo();
+
+                    break;
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
@@ -254,6 +263,7 @@ public class MainActivity extends Activity {
     }
 
     /**
+<<<<<<< .merge_file_e0Eo27
      * Save state.
      */
     private void saveState() {
@@ -326,7 +336,7 @@ public class MainActivity extends Activity {
         Log.i(TAG, "Cleaning directory: " + f.getAbsolutePath());
 
         File[] files = f.listFiles();
-        if (files != null || files.length <= 0) {
+        if (files != null && files.length > 0) {
             for (File inFile : files) {
                 boolean success = inFile.delete();
                 if (!success) {
@@ -347,19 +357,26 @@ public class MainActivity extends Activity {
         Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
 
         File[] files = f.listFiles();
-        if (files != null || files.length <= 0) {
+        if (files != null && files.length > 0) {
             for (File inFile : files) {
                 if (inFile.isDirectory()) {
                     Log.i(TAG, inFile + "(dir)");
-                }
-                else {
+                } else {
                     Log.i(TAG, "" + inFile);
                 }
             }
-        }
-        else {
+        } else {
             Log.i(TAG, "directory empty or does not exist.");
         }
+    }
+
+    /**
+     * Launch the record memo intent.
+     *
+     */
+    private void recordMemo() {
+        Intent intent = new Intent(this, MemoActivity.class);
+        startActivityForResult(intent, RECORD_MEMO_REQUEST);
     }
 
     /**
@@ -378,6 +395,10 @@ public class MainActivity extends Activity {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
             processVideoWhenReady(data.getStringExtra("path"));
+        } else if (requestCode == RECORD_MEMO_REQUEST && resultCode == RESULT_OK) {
+            Log.i(TAG, "Received memo: " + data.getStringExtra("path"));
+
+            processAudioWhenReady(data.getStringExtra("path"));
         }
         else if (requestCode == SCAN_PATIENT_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
@@ -443,6 +464,13 @@ public class MainActivity extends Activity {
         else if (step == 1) {
             textCountView = (TextView) findViewById(R.id.videoNumber);
             textCountView.setText(String.valueOf(videoPaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.videoLabel);
+        } else if (step == 2) {
+            textCountView = (TextView) findViewById(R.id.memoNumber);
+            textCountView.setText(String.valueOf(audioPaths.size()));
+
+            textLabelView = (TextView) findViewById(R.id.memoLabel);
         }
 
         if (textCountView != null && textLabelView != null) {
@@ -554,6 +582,63 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void run() {
                                     processVideoWhenReady(videoPath);
+                                }
+                            });
+                        }
+                    }
+                }
+            };
+            observer.startWatching();
+        }
+    }
+
+    /**
+     * Process the audio.
+     *
+     * @param audioPath path to the image.
+     */
+    private void processAudioWhenReady(final String audioPath) {
+        final File audioFile = new File(audioPath);
+
+        if (audioFile.exists()) {
+            // The video is ready. We are not gonna work with it, but now we know it has been
+            // saved to disc.
+            audioPaths.add(audioPath);
+
+            Log.i(TAG, "Audio ready, with path: " + audioPath);
+
+            setStepAccept(2);
+        } else {
+            // The file does not exist yet. Before starting the file observer, you
+            // can update your UI to let the user know that the application is
+            // waiting for the picture (for example, by displaying the thumbnail
+            // image and a progress indicator).
+            // @TODO: Add progress bar. Return to main menu when video is ready.
+
+            final File parentDirectory = audioFile.getParentFile();
+            FileObserver observer = new FileObserver(parentDirectory.getPath(),
+                    FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
+                // Protect against additional pending events after CLOSE_WRITE
+                // or MOVED_TO is handled.
+                private boolean isFileWritten;
+
+                @Override
+                public void onEvent(int event, String path) {
+                    if (!isFileWritten) {
+                        // For safety, make sure that the file that was created in
+                        // the directory is actually the one that we're expecting.
+                        File affectedFile = new File(parentDirectory, path);
+                        isFileWritten = affectedFile.equals(audioFile);
+
+                        if (isFileWritten) {
+                            stopWatching();
+
+                            // Now that the file is ready, recursively call
+                            // processPictureWhenReady again (on the UI thread).
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    processAudioWhenReady(audioPath);
                                 }
                             });
                         }
