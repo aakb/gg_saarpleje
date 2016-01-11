@@ -430,7 +430,9 @@ public class VideoActivity extends Activity {
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
-        mSensorManager.unregisterListener(mSensorEventListener);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
+        }
     }
 
     /**
@@ -444,7 +446,9 @@ public class VideoActivity extends Activity {
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
-        mSensorManager.unregisterListener(mSensorEventListener);
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
+        }
     }
 
     @Override
