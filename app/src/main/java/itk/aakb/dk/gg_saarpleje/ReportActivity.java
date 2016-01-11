@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -17,24 +18,22 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
 import java.util.Arrays;
 
-public class ReportActivity extends Activity {
+public class ReportActivity extends Activity implements MediaHandlerListener {
     private static final String TAG = "ReportActivity";
     private static final String FILE_DIRECTORY = "saarpleje";
 
-    private static final String POST_LINEEND = "\r\n";
-    private static final String POST_TWOHYPHENS = "--";
-    private static final String POST_BOUNDARY = "*****";
+    private static final String LINEEND = "\r\n";
+    private static final String TWOHYPHENS = "--";
+    private static final String BOUNDARY = "********";
 
     private TextView info;
-
-//    private String recipient_email;
-//    private String recipient_name;
-//    private String subject;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,80 +42,106 @@ public class ReportActivity extends Activity {
 
         info = (TextView) findViewById(R.id.text_info);
 
-//        Intent intent = getIntent();
-//        recipient_email = intent.getStringExtra("recipient_email");
-//        recipient_name = intent.getStringExtra("recipient_name");
-//        subject = intent.getStringExtra("subject");
-
         finishReport();
     }
 
     class MediaHandler extends AsyncTask<Object, Object, JSONObject> {
+        private MediaHandlerListener listener;
+
+        public MediaHandler(MediaHandlerListener listener) {
+            this.listener = listener;
+        }
+
+        private Socket socket;
+        private DataOutputStream out;
+        private BufferedReader in;
+
+        private JSONObject streamFiles(String serviceUrl, File[] files, Bundle extras) {
+            JSONObject result = null;
+            try {
+                URL url = new URL(serviceUrl);
+                Socket socket = new Socket(url.getHost(), url.getPort());
+                out = new DataOutputStream(socket.getOutputStream());
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                String senderAddress = "googleglass@mikkelricky.dk";
+                String senderName = "Google Glass";
+                String recipientAddress = extras.getString("recipient_email");
+                String recipientName = extras.getString("recipient_name");
+                String subject = extras.getString("subject");
+
+                sendCommand("MAIL FROM:" + "<" + senderAddress + ">", 250);
+                sendCommand("RCPT TO:" + "<" + recipientAddress + ">", 250);
+                sendCommand("DATA", 354);
+
+                sendLine("From: " + senderName + " <" + senderAddress + ">");
+                sendLine("To: " + recipientName + " <" + recipientAddress + ">");
+                sendLine("Subject: " + subject);
+
+                sendLine("Content-Type: multipart/mixed;");
+                sendLine("        boundary=" + BOUNDARY);
+                sendLine("Content-Transfer-Encoding: 8bit");
+
+                sendLine();
+                sendLine("This is a multi-part message in MIME format.");
+                sendLine();
+                sendLine(TWOHYPHENS + BOUNDARY);
+                sendLine("Content-Type: text/plain; charset=\"utf-8\"");
+                sendLine("Content-Transfer-Encoding: 8bit");
+                sendLine();
+                sendLine("#files: " + files.length);
+                sendLine();
+                sendLine(TWOHYPHENS + BOUNDARY);
+
+                writeFiles(out, files);
+
+                sendLine();
+                sendCommand(".", 250);
+                sendCommand("QUIT", 221);
+
+                // cleanUp();
+
+//                writeExtras(dos, extras);
+//                dos.close();
+                socket.close();
+            } catch (Throwable t) {
+                Log.e(TAG, "Hmm ...", t);
+                String s = t.getMessage();
+            }
+
+            this.listener.onResult(result);
+            return result;
+        }
+
+        private void sendCommand(String command, int expect) throws Exception {
+            System.err.println(command);
+            out.writeBytes(command + LINEEND);
+            String response = readLine();
+            if (!response.startsWith(expect + " ")) {
+                throw new Exception("Expected: " + expect + "; got: " + response);
+            }
+            System.err.println(response);
+        }
+
+        private void sendLine(String line) throws Exception {
+            System.err.println(line);
+            out.writeBytes(line + LINEEND);
+        }
+
+        private void sendLine() throws Exception {
+            sendLine("");
+        }
+
+        private String readLine() throws Exception {
+            return in.readLine();
+        }
+
         @Override
         protected JSONObject doInBackground(Object... params) {
-            try {
-                // http://developer.android.com/tools/devices/emulator.html#emulatornetworking
-
-                String reportServiceUrl = (String) params[0];
-                File[] files = (File[]) params[1];
-                Bundle extras = (Bundle) params[2];
-
-// http://androidexample.com/Upload_File_To_Server_-_Android_Example/index.php?view=article_discription&aid=83&aaid=106
-                URL url = new URL(reportServiceUrl);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-                connection.setDoInput(true); // Allow Inputs
-                connection.setDoOutput(true); // Allow Outputs
-                connection.setUseCaches(false); // Don't use a Cached Copy
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Connection", "Keep-Alive");
-                connection.setRequestProperty("ENCTYPE", "multipart/form-data");
-                connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + POST_BOUNDARY);
-
-                DataOutputStream dos = new DataOutputStream(connection.getOutputStream());
-
-                // Map<String, Object> data = new HashMap<>();
-                // data.put("recipient_email", recipient_email);
-                // data.put("recipient_name", recipient_name);
-                // data.put("subject", subject);
-                // writeData(dos, data);
-                writeExtras(dos, extras);
-
-                try {
-                    writeFiles(dos, files);
-                } catch (Throwable ex) {
-                    Log.e(TAG, "Error in writeFiles", ex);
-                }
-
-                dos.flush();
-                dos.close();
-
-                publishProgress("Sending files to ...");
-
-                // Responses from the server (code and message)
-                int serverResponseCode = connection.getResponseCode();
-                String serverResponseMessage = connection.getResponseMessage();
-
-                Log.i("uploadFile", "HTTP Response is : " + serverResponseMessage + ": " + serverResponseCode);
-
-                JSONObject response = getReponse(connection);
-                // Log.e(TAG, "reponse: " + response);
-                if (serverResponseCode == 200) {
-                    // Remove all files.
-                    for (File file : files) {
-                        file.delete();
-                    }
-
-                    publishProgress("Done.");
-                    return response;
-                }
-                publishProgress("Something did not work ...");
-            } catch (MalformedURLException ex) {
-                Log.e(TAG, "error: " + ex.getMessage(), ex);
-            } catch (Exception e) {
-                Log.e(TAG, "Exception : " + e.getMessage(), e);
-            }
-            return null;
+            String url = (String) params[0];
+            File[] files = (File[]) params[1];
+            Bundle extras = (Bundle) params[2];
+            return streamFiles(url, files, extras);
         }
 
         @Override
@@ -140,32 +165,19 @@ public class ReportActivity extends Activity {
 //            publishProgress();
         }
 
-//        private void writeData(DataOutputStream dos, Map<String, Object> data) throws Exception {
-//            for (Map.Entry<String, Object> entry : data.entrySet()) {
-//                if (entry.getValue() != null) {
-//                    dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_LINEEND);
-//                    dos.writeBytes("Content-Disposition: form-data; name=\"" + entry.getKey() + "\"" + POST_LINEEND);
-//                    dos.writeBytes(POST_LINEEND);
-//                    dos.writeBytes(entry.getValue().toString());
-//                    dos.writeBytes(POST_LINEEND);
-//                    dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_TWOHYPHENS + POST_LINEEND);
-//                }
-//            }
-//        }
-
         private void writeExtras(DataOutputStream dos, Bundle extras) throws Exception {
+            dos.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
+            dos.writeBytes(LINEEND);
+            dos.writeBytes("Content-Type: text/plain;" + LINEEND);
             for (String key : extras.keySet()) {
                 Object value = extras.get(key);
-                dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_LINEEND);
-                dos.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + POST_LINEEND);
-                dos.writeBytes(POST_LINEEND);
-                dos.writeBytes(value != null ? value.toString() : "");
-                dos.writeBytes(POST_LINEEND);
-                dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_TWOHYPHENS + POST_LINEEND);
+                dos.writeBytes(key + ": " + (value != null ? value.toString() : "") + LINEEND);
             }
+            dos.writeBytes(LINEEND);
+            dos.writeBytes(TWOHYPHENS + BOUNDARY + TWOHYPHENS + LINEEND);
         }
 
-        private void writeFiles(DataOutputStream dos, File[] files) throws Throwable {
+        private void writeFiles(DataOutputStream out, File[] files) throws Throwable {
             int maxBufferSize = 1024 * 1024;
 
             int count = 0;
@@ -176,11 +188,19 @@ public class ReportActivity extends Activity {
 
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
-                String formName = "file" + count;
-                dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_LINEEND);
-                dos.writeBytes("Content-Disposition: form-data; name=\"" + formName + "\";filename=\"" + file.getName() + "\"" + POST_LINEEND);
-                dos.writeBytes(POST_LINEEND);
+//                out.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
+                out.writeBytes("Content-Type: application/octet-stream; name=\"" + file.getName() + "\"" + LINEEND);
+                out.writeBytes("Content-Transfer-Encoding: base64" + LINEEND);
+                out.writeBytes("Content-Disposition: attachment; filename=" + file.getName() + LINEEND);
+                out.writeBytes(LINEEND);
 
+// @TODO Chunk files?
+                 FileInputStream fileInputStreamReader = new FileInputStream(file);
+                 byte[] buffer = new byte[(int)file.length()];
+                 fileInputStreamReader.read(buffer);
+                 out.write(Base64.encode(buffer, Base64.DEFAULT));
+
+/*
                 // create a buffer of maximum size
                 int bytesAvailable = fileInputStream.available();
                 int bufferSize = Math.min(bytesAvailable, maxBufferSize);
@@ -190,16 +210,17 @@ public class ReportActivity extends Activity {
                 int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 
                 while (bytesRead > 0) {
-                    dos.write(buffer, 0, bufferSize);
+                    out.write(Base64.encode(buffer, Base64.DEFAULT), 0, bufferSize);
                     bytesAvailable = fileInputStream.available();
                     bufferSize = Math.min(bytesAvailable, maxBufferSize);
                     bytesRead = fileInputStream.read(buffer, 0, bufferSize);
                     // break; // We may run out of memory ...
                 }
 
-                // send multipart form data necessary after file data...
-                dos.writeBytes(POST_LINEEND);
-                dos.writeBytes(POST_TWOHYPHENS + POST_BOUNDARY + POST_TWOHYPHENS + POST_LINEEND);
+  */
+                out.writeBytes(LINEEND);
+                out.writeBytes(LINEEND);
+                out.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
                 fileInputStream.close();
             }
         }
@@ -250,22 +271,49 @@ public class ReportActivity extends Activity {
     }
 
     public void finishReport() {
-        String reportServiceUrl = "http://mikkelricky.dk/saarpleje/";
+        // http://developer.android.com/tools/devices/emulator.html#networkaddresses
+        String proxyUrl = "http://10.0.2.2:10000";
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
 
-        File[] files = mediaStorageDir.listFiles();
+        mediaFiles = mediaStorageDir.listFiles();
 
-        if (files.length == 0) {
+        if (mediaFiles.length == 0) {
             setInfo(R.string.no_media_files);
         } else {
-            for (File file : files) {
+            for (File file : mediaFiles) {
                 Log.e(TAG, String.format("%s: %d", file.getName(), file.length()));
             }
 
-            setInfo(getResources().getQuantityString(R.plurals.uploading_n_files, files.length, files.length));
+            setInfo(getResources().getQuantityString(R.plurals.uploading_n_files, mediaFiles.length, mediaFiles.length));
 
-            new MediaHandler().execute(reportServiceUrl, files, getIntent().getExtras());
+            new MediaHandler(this).execute(proxyUrl, mediaFiles, getIntent().getExtras());
         }
     }
+
+    private File[] mediaFiles;
+
+    private void cleanUp() {
+        // Remove all files.
+        for (File file : mediaFiles) {
+            file.delete();
+        }
+    }
+
+    @Override
+    public void onResult(JSONObject result) {
+        try {
+            int code = result.getInt("code");
+            if (code == 200) {
+                cleanUp();
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, "onResult", ex);
+        }
+    }
+}
+
+// http://stackoverflow.com/a/9963705
+interface MediaHandlerListener {
+    void onResult(JSONObject result);
 }

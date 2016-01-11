@@ -9,8 +9,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.glass.view.WindowUtils;
+
+import org.apache.commons.validator.routines.EmailValidator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,15 +23,19 @@ public class MainActivity extends Activity {
     private static final String TAG = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
-    private static final int FINISH_REPORT_REQUEST = 103;
+    private static final int SCAN_PATIENT_REQUEST = 103;
+    private static final int SCAN_RECEIVER_REQUEST = 104;
+    private static final int FINISH_REPORT_REQUEST = 105;
 
-    private List<String> imagePaths = new ArrayList<String>();
-    private List<String> videoPaths = new ArrayList<String>();
+    private List<String> imagePaths = new ArrayList<>();
+    private List<String> videoPaths = new ArrayList<>();
+    private String patient = null;
+    private String receiver = null;
 
     /**
      * On create.
      *
-     * @param bundle
+     * @param bundle the bundle
      */
     @Override
     protected void onCreate(Bundle bundle) {
@@ -46,14 +53,21 @@ public class MainActivity extends Activity {
     /**
      * On create panel menu.
      *
-     * @param featureId
-     * @param menu
-     * @return
+     * @param featureId the feature id
+     * @param menu the menu to create
+     *
+     * @return boolean
      */
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
-            getMenuInflater().inflate(R.menu.main, menu);
+            if (receiver != null && patient != null) {
+                getMenuInflater().inflate(R.menu.main, menu);
+            }
+            else {
+                getMenuInflater().inflate(R.menu.start, menu);
+            }
+
             return true;
         }
 
@@ -64,12 +78,18 @@ public class MainActivity extends Activity {
     /**
      * On create options menu.
      *
-     * @param menu
-     * @return
+     * @param menu The menu to create
+     * @return boolean
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        if (receiver != null && patient != null) {
+            getMenuInflater().inflate(R.menu.main, menu);
+        }
+        else {
+            getMenuInflater().inflate(R.menu.start, menu);
+        }
+
         return true;
     }
 
@@ -78,9 +98,10 @@ public class MainActivity extends Activity {
      * <p/>
      * Processes the voice commands from the main menu.
      *
-     * @param featureId
-     * @param item
-     * @return
+     * @param featureId the feature id
+     * @param item the selected menu item
+     *
+     * @return boolean
      */
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -100,6 +121,12 @@ public class MainActivity extends Activity {
                     Log.i(TAG, "menu: record 30 seconds video");
 
                     recordVideo(30);
+
+                    break;
+                case R.id.record_video_menu_item_1_minute:
+                    Log.i(TAG, "menu: record 1 minute video");
+
+                    recordVideo(60);
 
                     break;
                 case R.id.record_video_menu_item_2_minutes:
@@ -129,6 +156,17 @@ public class MainActivity extends Activity {
                 case R.id.confirm_cancel:
                     Log.i(TAG, "menu: Confirm: cancel and exit");
                     finish();
+
+                    break;
+                case R.id.scan_patient_menu_item:
+                    Intent scanPatientIntent = new Intent(this, QRActivity.class);
+                    startActivityForResult(scanPatientIntent, SCAN_PATIENT_REQUEST);
+
+                    break;
+                case R.id.add_receiver_menu_item:
+                    Intent addReceiverIntent = new Intent(this, QRActivity.class);
+                    startActivityForResult(addReceiverIntent, SCAN_RECEIVER_REQUEST);
+
                     break;
                 default:
                     return true;
@@ -151,7 +189,7 @@ public class MainActivity extends Activity {
     /**
      * Launch the record video intent.
      *
-     * @param unlimited
+     * @param unlimited whether or not the video should be unlimited.
      */
     private void recordVideo(boolean unlimited) {
         Intent intent = new Intent(this, VideoActivity.class);
@@ -162,7 +200,7 @@ public class MainActivity extends Activity {
     /**
      * Launch the record video intent.
      *
-     * @param duration
+     * @param duration the duration of the video to record
      */
     private void recordVideo(int duration) {
         Intent intent = new Intent(this, VideoActivity.class);
@@ -192,10 +230,38 @@ public class MainActivity extends Activity {
             Log.i(TAG, "Received image: " + data.getStringExtra("path"));
 
             processPictureWhenReady(data.getStringExtra("path"));
-        } else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
+        }
+        else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
             processVideoWhenReady(data.getStringExtra("path"));
+        }
+        else if (requestCode == SCAN_PATIENT_REQUEST && resultCode == RESULT_OK) {
+            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
+
+            patient = data.getStringExtra("result");
+
+            TextView text = (TextView) findViewById(R.id.patientIdentifier);
+            text.setText(patient);
+            text.invalidate();
+        }
+        else if (requestCode == SCAN_RECEIVER_REQUEST && resultCode == RESULT_OK) {
+            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
+
+            String s = data.getStringExtra("result");
+
+            boolean valid = EmailValidator.getInstance().isValid(s);
+
+            if (valid) {
+                receiver = s;
+
+                TextView text = (TextView) findViewById(R.id.receiverIdentifier);
+                text.setText(receiver);
+                text.invalidate();
+            }
+            else {
+                Toast.makeText(getApplicationContext(), "Invalid receiver: " + s + ". Scan again.", Toast.LENGTH_LONG).show();
+            }
         }
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -217,7 +283,8 @@ public class MainActivity extends Activity {
             textCountView.setText(String.valueOf(imagePaths.size()));
 
             textLabelView = (TextView) findViewById(R.id.beforeImageLabel);
-        } else if (step == 1) {
+        }
+        else if (step == 1) {
             textCountView = (TextView) findViewById(R.id.videoNumber);
             textCountView.setText(String.valueOf(videoPaths.size()));
 
@@ -249,13 +316,8 @@ public class MainActivity extends Activity {
             setStepAccept(0);
 
             Log.i(TAG, "Before picture ready, with path: " + picturePath);
-        } else {
-            // The file does not exist yet. Before starting the file observer, you
-            // can update your UI to let the user know that the application is
-            // waiting for the picture (for example, by displaying the thumbnail
-            // image and a progress indicator).
-            // @TODO: Add progress bar. Return to main menu when image is ready.
-
+        }
+        else {
             final File parentDirectory = pictureFile.getParentFile();
             FileObserver observer = new FileObserver(parentDirectory.getPath(),
                     FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
@@ -307,13 +369,8 @@ public class MainActivity extends Activity {
             Log.i(TAG, "Video ready, with path: " + videoPath);
 
             setStepAccept(1);
-        } else {
-            // The file does not exist yet. Before starting the file observer, you
-            // can update your UI to let the user know that the application is
-            // waiting for the picture (for example, by displaying the thumbnail
-            // image and a progress indicator).
-            // @TODO: Add progress bar. Return to main menu when video is ready.
-
+        }
+        else {
             final File parentDirectory = videoFile.getParentFile();
             FileObserver observer = new FileObserver(parentDirectory.getPath(),
                     FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
