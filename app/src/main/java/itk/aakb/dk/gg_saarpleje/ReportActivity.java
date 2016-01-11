@@ -7,20 +7,11 @@ import android.os.Environment;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.util.Arrays;
@@ -41,23 +32,19 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         setContentView(R.layout.activity_report);
 
         info = (TextView) findViewById(R.id.text_info);
-
-        finishReport();
     }
 
-    class MediaHandler extends AsyncTask<Object, Object, JSONObject> {
+    class MediaHandler extends AsyncTask<Object, Object, Boolean> {
         private MediaHandlerListener listener;
 
         public MediaHandler(MediaHandlerListener listener) {
             this.listener = listener;
         }
 
-        private Socket socket;
         private DataOutputStream out;
         private BufferedReader in;
 
-        private JSONObject streamFiles(String serviceUrl, File[] files, Bundle extras) {
-            JSONObject result = null;
+        private Boolean streamFiles(String serviceUrl, File[] files, Bundle extras) {
             try {
                 URL url = new URL(serviceUrl);
                 Socket socket = new Socket(url.getHost(), url.getPort());
@@ -99,28 +86,23 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 sendCommand(".", 250);
                 sendCommand("QUIT", 221);
 
-                // cleanUp();
-
-//                writeExtras(dos, extras);
-//                dos.close();
                 socket.close();
+                this.listener.onResult(true);
+                return true;
             } catch (Throwable t) {
                 Log.e(TAG, "Hmm ...", t);
-                String s = t.getMessage();
             }
 
-            this.listener.onResult(result);
-            return result;
+            this.listener.onResult(false);
+            return false;
         }
 
         private void sendCommand(String command, int expect) throws Exception {
-            System.err.println(command);
             out.writeBytes(command + LINEEND);
             String response = readLine();
             if (!response.startsWith(expect + " ")) {
                 throw new Exception("Expected: " + expect + "; got: " + response);
             }
-            System.err.println(response);
         }
 
         private void sendLine(String line) throws Exception {
@@ -137,7 +119,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         }
 
         @Override
-        protected JSONObject doInBackground(Object... params) {
+        protected Boolean doInBackground(Object... params) {
             String url = (String) params[0];
             File[] files = (File[]) params[1];
             Bundle extras = (Bundle) params[2];
@@ -159,27 +141,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
             Log.e(TAG, String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length)));
         }
 
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            super.onPostExecute(jsonObject);
-//            publishProgress();
-        }
-
-        private void writeExtras(DataOutputStream dos, Bundle extras) throws Exception {
-            dos.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
-            dos.writeBytes(LINEEND);
-            dos.writeBytes("Content-Type: text/plain;" + LINEEND);
-            for (String key : extras.keySet()) {
-                Object value = extras.get(key);
-                dos.writeBytes(key + ": " + (value != null ? value.toString() : "") + LINEEND);
-            }
-            dos.writeBytes(LINEEND);
-            dos.writeBytes(TWOHYPHENS + BOUNDARY + TWOHYPHENS + LINEEND);
-        }
-
         private void writeFiles(DataOutputStream out, File[] files) throws Throwable {
-            int maxBufferSize = 1024 * 1024;
-
             int count = 0;
             for (File file : files) {
                 count++;
@@ -188,63 +150,24 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
 
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
-//                out.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
                 out.writeBytes("Content-Type: application/octet-stream; name=\"" + file.getName() + "\"" + LINEEND);
                 out.writeBytes("Content-Transfer-Encoding: base64" + LINEEND);
                 out.writeBytes("Content-Disposition: attachment; filename=" + file.getName() + LINEEND);
                 out.writeBytes(LINEEND);
 
-// @TODO Chunk files?
-                 FileInputStream fileInputStreamReader = new FileInputStream(file);
-                 byte[] buffer = new byte[(int)file.length()];
-                 fileInputStreamReader.read(buffer);
-                 out.write(Base64.encode(buffer, Base64.DEFAULT));
-
-/*
-                // create a buffer of maximum size
-                int bytesAvailable = fileInputStream.available();
-                int bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                int bufferSize = 3 * 1024; // http://stackoverflow.com/a/7920834
                 byte[] buffer = new byte[bufferSize];
-
-                // read file and write it into form...
-                int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
+                int bytesRead = fileInputStream.read(buffer);
                 while (bytesRead > 0) {
-                    out.write(Base64.encode(buffer, Base64.DEFAULT), 0, bufferSize);
-                    bytesAvailable = fileInputStream.available();
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-                    // break; // We may run out of memory ...
+                    out.write(Base64.encode(buffer, Base64.DEFAULT));
+                    bytesRead = fileInputStream.read(buffer);
                 }
 
-  */
                 out.writeBytes(LINEEND);
                 out.writeBytes(LINEEND);
                 out.writeBytes(TWOHYPHENS + BOUNDARY + LINEEND);
                 fileInputStream.close();
             }
-        }
-
-        private JSONObject getReponse(HttpURLConnection connection) {
-            try {
-                InputStream responseStream = connection.getResponseCode() == 200 ? connection.getInputStream() : connection.getErrorStream();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(responseStream));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line);
-                }
-                br.close();
-                Log.i(TAG, sb.toString());
-
-
-                return new JSONObject(sb.toString());
-            } catch (IOException ex) {
-            } catch (JSONException ex) {
-            }
-
-            return null;
         }
     }
 
@@ -301,19 +224,17 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     }
 
     @Override
-    public void onResult(JSONObject result) {
-        try {
-            int code = result.getInt("code");
-            if (code == 200) {
-                cleanUp();
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, "onResult", ex);
+    public void onResult(boolean success) {
+        Log.e(TAG, "onResult: " + success);
+        if (success) {
+            cleanUp();
         }
     }
 }
 
 // http://stackoverflow.com/a/9963705
 interface MediaHandlerListener {
-    void onResult(JSONObject result);
+    void onResult(boolean result);
 }
+
+

@@ -1,7 +1,5 @@
 package itk.aakb.dk.gg_saarpleje;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.test.ActivityInstrumentationTestCase2;
@@ -9,28 +7,27 @@ import android.util.Base64;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.URL;
 import java.util.Date;
 
 /**
  * Created by rimi on 05/01/16.
  */
-public class ReportActivityTest extends ActivityInstrumentationTestCase2<ReportActivity> {
+public class ReportActivityTest extends ActivityInstrumentationTestCase2<ReportActivity> implements MediaHandlerListener {
     public ReportActivityTest() {
         super(ReportActivity.class);
     }
 
     private static final String FILE_DIRECTORY = "saarpleje";
+    private File mediaStorageDir;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
     }
 
     public void testFinishReport() {
-        Context context = getInstrumentation().getContext();
         // Ensure that media storage directory exists.
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
         if (!mediaStorageDir.exists()) {
             mediaStorageDir.mkdirs();
         }
@@ -63,6 +60,11 @@ public class ReportActivityTest extends ActivityInstrumentationTestCase2<ReportA
         setActivityIntent(intent);
         ReportActivity activity = getActivity();
         activity.finishReport();
+    }
+
+    @Override
+    public void onResult(boolean result) {
+        assertTrue(result);
 
         File[] files = mediaStorageDir.listFiles();
         assertEquals("No files exist", 0, files.length);

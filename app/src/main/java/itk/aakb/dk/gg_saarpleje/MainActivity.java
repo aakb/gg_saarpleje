@@ -17,6 +17,7 @@ import org.apache.commons.validator.routines.EmailValidator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends Activity {
@@ -150,7 +151,7 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
-                    finishReport("googleglass@mikkelricky.dk", null);
+                    finishReport("googleglass@mikkelricky.dk", "Google Glass", "Sårplejerapport – " + new Date());
 
                     break;
                 case R.id.confirm_cancel:
@@ -211,11 +212,12 @@ public class MainActivity extends Activity {
     /**
      * Launch the finish report intent.
      */
-    private void finishReport(String email, String name) {
+    private void finishReport(String email, String name, String subject) {
         Intent intent = new Intent(this, ReportActivity.class);
         intent
                 .putExtra("recipient_email", email)
-                .putExtra("recipient_name", name);
+                .putExtra("recipient_name", name)
+                .putExtra("subject", subject);
         startActivityForResult(intent, FINISH_REPORT_REQUEST);
     }
 
