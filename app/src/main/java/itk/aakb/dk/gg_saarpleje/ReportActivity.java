@@ -56,6 +56,10 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         }
 
         info = (TextView) findViewById(R.id.text_info);
+
+        Log.i(TAG, "onCreate done.");
+
+        finishReport();
     }
 
     class MediaHandler extends AsyncTask<Object, Object, Boolean> {
@@ -220,7 +224,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     public void finishReport() {
         if (mediaFilePaths != null) {
             int i = 0;
-            mediaFiles = new File[]{};
+            mediaFiles = new File[mediaFilePaths.size()];
             for (String path : mediaFilePaths) {
                 mediaFiles[i] = new File(path);
                 i++;
@@ -237,7 +241,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
             setInfo(R.string.no_media_files);
         } else {
             for (File file : mediaFiles) {
-                Log.e(TAG, String.format("%s: %d", file.getName(), file.length()));
+                Log.i(TAG, String.format("%s: %d", file.getName(), file.length()));
             }
 
             setInfo(getResources().getQuantityString(R.plurals.uploading_n_files, mediaFiles.length, mediaFiles.length));
