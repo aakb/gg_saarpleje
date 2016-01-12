@@ -269,21 +269,23 @@ public class MainActivity extends Activity {
     }
 
     /**
-<<<<<<< HEAD
      * Launch the finish report intent.
      */
     private void finishReport(String email, String subject) {
+        ArrayList<String> mediaPaths = new ArrayList<>();
+        mediaPaths.addAll(imagePaths);
+        mediaPaths.addAll(videoPaths);
+        mediaPaths.addAll(audioPaths);
+
         Intent intent = new Intent(this, ReportActivity.class);
-        intent.putExtra("recipient_email", email)
-              .putExtra("subject", subject)
-              .putExtra("text", "Patient: " + patient);
+        intent.putExtra("recipient_email", email);
+        intent.putExtra("subject", subject);
+        intent.putExtra("media_files", mediaPaths);
+        intent.putExtra("text", "Patient: " + patient);
         startActivityForResult(intent, FINISH_REPORT_REQUEST);
     }
 
     /*
-=======
-<<<<<<< .merge_file_e0Eo27
->>>>>>> development
      * Save state.
      */
     private void saveState() {

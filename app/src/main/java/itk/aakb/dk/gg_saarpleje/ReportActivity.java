@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -31,12 +32,17 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     private File[] mediaFiles;
     private String senderAddress;
     private String proxyUrl;
+    private ArrayList<String> mediaFilePaths;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
 
+        Intent intent = getIntent();
+        mediaFilePaths = intent.getStringArrayListExtra("media_files");
+
+        // Read properties from assets/config.properties
         try {
             Properties properties = new Properties();
             AssetManager assetManager = getApplicationContext().getAssets();
@@ -212,11 +218,22 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     }
 
     public void finishReport() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
+        if (mediaFilePaths != null) {
+            int i = 0;
+            mediaFiles = new File[]{};
+            for (String path : mediaFilePaths) {
+                mediaFiles[i] = new File(path);
+                i++;
+            }
+        }
+        else {
+            File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
-        mediaFiles = mediaStorageDir.listFiles();
+            mediaFiles = mediaStorageDir.listFiles();
+        }
 
-        if (mediaFiles.length == 0) {
+
+        if (mediaFiles == null || mediaFiles.length == 0) {
             setInfo(R.string.no_media_files);
         } else {
             for (File file : mediaFiles) {
