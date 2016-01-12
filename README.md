@@ -2,10 +2,6 @@
 Google Glass saarpleje prototype
 
 
-## Mail stuff
+## Mail proxy
 
-To start the mail proxy, run
-
-```
-./webservice/mail-proxy.php
-```
+See [webservice/README.md](webservice/README.md).

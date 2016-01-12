@@ -1,4 +1,4 @@
-#!/usr/bin/env php -q
+#!/usr/bin/env php
 <?php
 error_reporting(E_ALL);
 
@@ -9,21 +9,14 @@ set_time_limit(0);
  * as it comes in. */
 ob_implicit_flush();
 
-// mailcatcher.me
-$smtp = (object)[
-  'host' => 'tcp://127.0.0.1',
-  'port' => 1025,
-];
+if (!file_exists(__DIR__ . '/config.php')) {
+  die('Cannot read config.php');
+}
+include_once(__DIR__ . '/config.php');
 
-// Google smtp
-$smtp = (object)[
- 'host' => 'tls://smtp.gmail.com',
- 'port' => '465',
- 'auth' => true,
- 'username' => '', // Some gmail username
- 'password' => '', // https://security.google.com/settings/security/apppasswords
-];
-
+if (!isset($smtp)) {
+  die('No smtp defined');
+}
 if (isset($smtp->username) && empty($smtp->username)) {
   die('No smtp username defined');
 }
@@ -31,10 +24,17 @@ if (isset($smtp->password) && empty($smtp->password)) {
   die('No smtp password defined');
 }
 
-$address = '127.0.0.1';
-$port = 10000;
+if (!isset($proxy)) {
+  die('No proxy defined');
+}
+if (!isset($proxy->host)) {
+  die('No proxy host defined');
+}
+if (!isset($proxy->port)) {
+  die('No proxy port');
+}
 
-$server = stream_socket_server('tcp://' . $address . ':' . $port, $errno, $errstr);
+$server = stream_socket_server('tcp://' . $proxy->host . ':' . $proxy->port, $errno, $errstr);
 
 define('NEWLINE', "\r\n");
 
@@ -52,12 +52,13 @@ function smtpCommand($socket, $command, $expect = 0) {
 }
 
 do {
-  echo 'Waiting for connection on ' . $address . ':' . $port . ' …' . PHP_EOL;
+  echo 'Waiting for connection on ' . $proxy->host . ':' . $proxy->port . ' …' . PHP_EOL;
   if ($client = @stream_socket_accept($server)) {
     is_dir('streams') || mkdir('streams');
     $bufferName = 'streams/' . strftime('%Y-%m-%dH%H-%M-%Svbm') . uniqid() . '.eml';
     $buffer = fopen($bufferName, 'w');
     echo 'Buffer: ' . $bufferName . PHP_EOL;
+    echo 'Name: ' . $peername . PHP_EOL;
 
     $smtpUrl = $smtp->host . ':' . $smtp->port;
     echo 'Creating mailer ' . $smtpUrl . ' ...' . PHP_EOL;
