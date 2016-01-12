@@ -26,21 +26,16 @@ import java.util.TimerTask;
 
 public class VideoActivity extends Activity {
     private static final String TAG = "VideoActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
 
     private Camera camera;
     private CameraPreview cameraPreview;
     private MediaRecorder mediaRecorder;
     private TextView countdownText;
-
     private Timer timer;
     private int timerExecutions = 0;
     private int videoLength;
-    private boolean unlimited;
     private boolean recording = false;
-
     private String outputPath;
-
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private Sensor mMagnetometer;
@@ -54,7 +49,7 @@ public class VideoActivity extends Activity {
     /**
      * On create.
      *
-     * @param savedInstanceState
+     * @param savedInstanceState save instance state
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -63,7 +58,7 @@ public class VideoActivity extends Activity {
         // Get number of seconds to record. Defaults to 10 seconds.
         Intent intent = getIntent();
         videoLength = intent.getIntExtra("SECONDS", 10);
-        unlimited = intent.getBooleanExtra("UNLIMITED", false);
+        boolean unlimited = intent.getBooleanExtra("UNLIMITED", false);
 
         Log.i(TAG, "Launching activity");
 

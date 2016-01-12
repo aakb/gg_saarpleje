@@ -19,8 +19,6 @@ import java.util.Arrays;
 
 public class ReportActivity extends Activity implements MediaHandlerListener {
     private static final String TAG = "ReportActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
-
     private static final String LINEEND = "\r\n";
     private static final String TWOHYPHENS = "--";
     private static final String BOUNDARY = "********";

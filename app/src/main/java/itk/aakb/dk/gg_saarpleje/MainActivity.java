@@ -33,16 +33,15 @@ public class MainActivity extends Activity {
     private static final int SCAN_PATIENT_REQUEST = 103;
     private static final int SCAN_RECEIVER_REQUEST = 104;
     private static final int FINISH_REPORT_REQUEST = 105;
+    private static final String STATE_VIDEOS = "videos";
+    private static final String STATE_PICTURES = "pictures";
+    private static final String STATE_PATIENT = "patient";
+    private static final String STATE_RECEIVER = "receiver";
 
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ArrayList<String> videoPaths = new ArrayList<>();
     private String patient = null;
     private String receiver = null;
-
-    static final String STATE_VIDEOS = "videos";
-    static final String STATE_PICTURES = "pictures";
-    static final String STATE_PATIENT = "patient";
-    static final String STATE_RECEIVER = "receiver";
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {

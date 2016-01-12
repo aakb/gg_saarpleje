@@ -23,12 +23,10 @@ import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
     private static final String TAG = "CameraActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
 
     private Camera camera;
     private CameraPreview cameraPreview;
     private TextView countdownText;
-
     private Timer timer;
     private int timerExecutions = 0;
 
