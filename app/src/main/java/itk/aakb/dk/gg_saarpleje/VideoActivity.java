@@ -30,7 +30,8 @@ public class VideoActivity extends Activity {
     private Camera camera;
     private CameraPreview cameraPreview;
     private MediaRecorder mediaRecorder;
-    private TextView countdownText;
+    private TextView durationText;
+
     private Timer timer;
     private int timerExecutions = 0;
     private int videoLength;
@@ -60,11 +61,11 @@ public class VideoActivity extends Activity {
         videoLength = intent.getIntExtra("SECONDS", 10);
         boolean unlimited = intent.getBooleanExtra("UNLIMITED", false);
 
-        Log.i(TAG, "Launching activity");
+        Log.i(TAG, "Launching video activity");
 
         setContentView(R.layout.activity_camera_video);
 
-        countdownText = (TextView) findViewById(R.id.text_camera_countdown);
+        durationText = (TextView) findViewById(R.id.text_camera_duration);
 
         if (!checkCameraHardware(this)) {
             Log.i(TAG, "no camera");
@@ -98,7 +99,7 @@ public class VideoActivity extends Activity {
     }
 
     private void launchUnlimitedVideo() {
-        countdownText.setText("0 sec");
+        durationText.setText("0 sec");
 
         // Catch all errors, and release camera on error.
         try {
@@ -181,7 +182,7 @@ public class VideoActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    countdownText.setText(timerExecutions + " sec");
+                                    durationText.setText(timerExecutions + " sec");
                                 }
                             });
                         }
@@ -207,7 +208,7 @@ public class VideoActivity extends Activity {
      * Start process to take 10 s video.
      */
     private void launchAutoVideo() {
-        countdownText.setText(videoLength + " sec");
+        durationText.setText(videoLength + " sec");
 
         // Catch all errors, and release camera on error.
         try {
@@ -288,7 +289,7 @@ public class VideoActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    countdownText.setText((videoLength - timerExecutions) + " sec");
+                                    durationText.setText((videoLength - timerExecutions) + " sec");
                                 }
                             });
 

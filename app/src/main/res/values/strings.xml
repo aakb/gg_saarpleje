@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Saarpleje</string>
-    <string name="voice_command_start_program">start program</string>
+    <string name="voice_command_start_program">Start program</string>
     <string name="voice_command_menu">Say \"Okay, Glass\" to open menu</string>
-    <string name="finish">finish report</string>
-    <string name="take_image">take image</string>
-    <string name="record_video">record video</string>
+    <string name="finish">Finish report</string>
+    <string name="take_image">Take image</string>
+    <string name="record_video">Record video</string>
     <string name="countdown_default">...</string>
     <string name="title_activity_video">VideoActivity</string>
     <string name="progress_image">Images</string>
@@ -27,4 +27,7 @@
         <item quantity="one">Uploading 1 file</item>
         <item quantity="other">Uploading %d</item>
     </plurals>
+    <string name="progress_memos">Memos</string>
+    <string name="recording_memo">Recording memo</string>
+    <string name="record_memo">Dictate memo</string>
 </resources>
