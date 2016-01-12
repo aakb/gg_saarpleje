@@ -30,6 +30,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     private TextView info;
     private File[] mediaFiles;
     private String senderAddress;
+    private String proxyUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +42,8 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
             AssetManager assetManager = getApplicationContext().getAssets();
             InputStream inputStream = assetManager.open("config.properties");
             properties.load(inputStream);
-            senderAddress = properties.getProperty("senderAddress");
+            senderAddress = properties.getProperty("SenderAddress");
+            proxyUrl = properties.getProperty("ProxyUrl");
         }
         catch (IOException e) {
             Log.e(TAG, e.toString());
@@ -210,9 +212,6 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     }
 
     public void finishReport() {
-        // http://developer.android.com/tools/devices/emulator.html#networkaddresses
-        String proxyUrl = "http://10.0.2.2:10000";
-
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
         mediaFiles = mediaStorageDir.listFiles();
