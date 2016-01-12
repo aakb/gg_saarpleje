@@ -1,6 +1,7 @@
 package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,6 +26,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     private static final String BOUNDARY = "********";
 
     private TextView info;
+    private File[] mediaFiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,17 +54,16 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 String senderAddress = "googleglass@mikkelricky.dk";
-                String senderName = "Google Glass";
                 String recipientAddress = extras.getString("recipient_email");
-                String recipientName = extras.getString("recipient_name");
                 String subject = extras.getString("subject");
+                String text = extras.getString("text");
 
                 sendCommand("MAIL FROM:" + "<" + senderAddress + ">", 250);
                 sendCommand("RCPT TO:" + "<" + recipientAddress + ">", 250);
                 sendCommand("DATA", 354);
 
-                sendLine("From: " + senderName + " <" + senderAddress + ">");
-                sendLine("To: " + recipientName + " <" + recipientAddress + ">");
+                sendLine("From: <" + senderAddress + ">");
+                sendLine("To:   <" + recipientAddress + ">");
                 sendLine("Subject: " + subject);
 
                 sendLine("Content-Type: multipart/mixed;");
@@ -75,6 +76,8 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 sendLine(TWOHYPHENS + BOUNDARY);
                 sendLine("Content-Type: text/plain; charset=\"utf-8\"");
                 sendLine("Content-Transfer-Encoding: 8bit");
+                sendLine();
+                sendLine(text);
                 sendLine();
                 sendLine("#files: " + files.length);
                 sendLine();
@@ -197,7 +200,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         // http://developer.android.com/tools/devices/emulator.html#networkaddresses
         String proxyUrl = "http://10.0.2.2:10000";
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
         mediaFiles = mediaStorageDir.listFiles();
 
@@ -214,20 +217,18 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         }
     }
 
-    private File[] mediaFiles;
-
-    private void cleanUp() {
-        // Remove all files.
-        for (File file : mediaFiles) {
-            file.delete();
-        }
-    }
-
     @Override
     public void onResult(boolean success) {
         Log.e(TAG, "onResult: " + success);
         if (success) {
-            cleanUp();
+            // Add path to file as result
+            Intent returnIntent = new Intent();
+            setResult(RESULT_OK, returnIntent);
+
+            finish();
+        }
+        else {
+            finish();
         }
     }
 }

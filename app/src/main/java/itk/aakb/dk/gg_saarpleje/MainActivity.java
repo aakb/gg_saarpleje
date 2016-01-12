@@ -25,8 +25,9 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class MainActivity extends Activity {
+    public static final String FILE_DIRECTORY = "saarpleje";
+
     private static final String TAG = "saarpleje MainActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int SCAN_PATIENT_REQUEST = 103;
@@ -195,7 +196,7 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
-                    finishReport("googleglass@mikkelricky.dk", "Google Glass", "Sårplejerapport – " + new Date());
+                    finishReport(receiver, "Sårplejerapport – " + new Date());
 
                     break;
                 case R.id.confirm_cancel:
@@ -260,11 +261,11 @@ public class MainActivity extends Activity {
     /**
      * Launch the finish report intent.
      */
-    private void finishReport(String email, String name, String subject) {
+    private void finishReport(String email, String subject) {
         Intent intent = new Intent(this, ReportActivity.class);
         intent.putExtra("recipient_email", email)
-              .putExtra("recipient_name", name)
-              .putExtra("subject", subject);
+              .putExtra("subject", subject)
+              .putExtra("text", "Patient: " + patient);
         startActivityForResult(intent, FINISH_REPORT_REQUEST);
     }
 
@@ -424,6 +425,12 @@ public class MainActivity extends Activity {
             else {
                 Toast.makeText(getApplicationContext(), "Invalid receiver: " + s + ". Scan again.", Toast.LENGTH_LONG).show();
             }
+        }
+        else if (requestCode == FINISH_REPORT_REQUEST && resultCode == RESULT_OK) {
+            cleanDirectory();
+            deleteState();
+            Toast.makeText(getApplicationContext(), "Report sent.", Toast.LENGTH_LONG).show();
+            finish();
         }
 
         super.onActivityResult(requestCode, resultCode, data);
