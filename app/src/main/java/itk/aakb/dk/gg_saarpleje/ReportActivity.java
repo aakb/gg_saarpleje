@@ -2,6 +2,7 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,10 +13,13 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Properties;
 
 public class ReportActivity extends Activity implements MediaHandlerListener {
     private static final String TAG = "ReportActivity";
@@ -25,11 +29,23 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
 
     private TextView info;
     private File[] mediaFiles;
+    private String senderAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
+
+        try {
+            Properties properties = new Properties();
+            AssetManager assetManager = getApplicationContext().getAssets();
+            InputStream inputStream = assetManager.open("config.properties");
+            properties.load(inputStream);
+            senderAddress = properties.getProperty("senderAddress");
+        }
+        catch (IOException e) {
+            Log.e(TAG, e.toString());
+        }
 
         info = (TextView) findViewById(R.id.text_info);
     }
@@ -51,7 +67,6 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 out = new DataOutputStream(socket.getOutputStream());
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                String senderAddress = "googleglass@mikkelricky.dk";
                 String recipientAddress = extras.getString("recipient_email");
                 String subject = extras.getString("subject");
                 String text = extras.getString("text");
