@@ -22,15 +22,23 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends Activity {
+    public static final String FILE_DIRECTORY = "saarpleje";
+
     private static final String TAG = "saarpleje MainActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int SCAN_PATIENT_REQUEST = 103;
     private static final int SCAN_RECEIVER_REQUEST = 104;
-    private static final int RECORD_MEMO_REQUEST = 105;
+    private static final int FINISH_REPORT_REQUEST = 105;
+    private static final int RECORD_MEMO_REQUEST = 106;
+    private static final String STATE_VIDEOS = "videos";
+    private static final String STATE_PICTURES = "pictures";
+    private static final String STATE_PATIENT = "patient";
+    private static final String STATE_RECEIVER = "receiver";
+    private static final String STATE_MEMOS = "memos";
 
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ArrayList<String> videoPaths = new ArrayList<>();
@@ -38,12 +46,6 @@ public class MainActivity extends Activity {
 
     private String patient = null;
     private String receiver = null;
-
-    static final String STATE_VIDEOS = "videos";
-    static final String STATE_PICTURES = "pictures";
-    static final String STATE_MEMOS = "memos";
-    static final String STATE_PATIENT = "patient";
-    static final String STATE_RECEIVER = "receiver";
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -204,6 +206,8 @@ public class MainActivity extends Activity {
                 case R.id.finish_menu_item:
                     Log.i(TAG, "menu: finish report");
 
+                    finishReport(receiver, "Sårplejerapport – " + new Date());
+
                     break;
                 case R.id.confirm_cancel:
                     Log.i(TAG, "menu: Confirm: cancel and exit");
@@ -265,7 +269,23 @@ public class MainActivity extends Activity {
     }
 
     /**
-<<<<<<< .merge_file_e0Eo27
+     * Launch the finish report intent.
+     */
+    private void finishReport(String email, String subject) {
+        ArrayList<String> mediaPaths = new ArrayList<>();
+        mediaPaths.addAll(imagePaths);
+        mediaPaths.addAll(videoPaths);
+        mediaPaths.addAll(audioPaths);
+
+        Intent intent = new Intent(this, ReportActivity.class);
+        intent.putExtra("recipient_email", email);
+        intent.putExtra("subject", subject);
+        intent.putExtra("media_files", mediaPaths);
+        intent.putExtra("text", "Patient: " + patient);
+        startActivityForResult(intent, FINISH_REPORT_REQUEST);
+    }
+
+    /*
      * Save state.
      */
     private void saveState() {
@@ -278,7 +298,7 @@ public class MainActivity extends Activity {
         editor.putString(STATE_PICTURES, serializedImagePaths);
         editor.putString(STATE_PATIENT, patient);
         editor.putString(STATE_RECEIVER, receiver);
-        editor.commit();
+        editor.apply();
     }
 
     /**
@@ -288,7 +308,7 @@ public class MainActivity extends Activity {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.clear();
-        editor.commit();
+        editor.apply();
     }
 
     /**
@@ -434,6 +454,12 @@ public class MainActivity extends Activity {
                 Toast.makeText(getApplicationContext(), "Invalid receiver: " + s + ". Scan again.", Toast.LENGTH_LONG).show();
             }
         }
+        else if (requestCode == FINISH_REPORT_REQUEST && resultCode == RESULT_OK) {
+            cleanDirectory();
+            deleteState();
+            Toast.makeText(getApplicationContext(), "Report sent.", Toast.LENGTH_LONG).show();
+            finish();
+        }
 
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -476,12 +502,13 @@ public class MainActivity extends Activity {
             textLabelView = (TextView) findViewById(R.id.memoLabel);
         }
 
-        if (textCountView != null && textLabelView != null) {
+        if (textCountView != null) {
             textCountView.setTextColor(Color.WHITE);
-            textLabelView.setTextColor(Color.WHITE);
-
-            textLabelView.invalidate();
             textCountView.invalidate();
+        }
+        if (textLabelView != null) {
+            textLabelView.setTextColor(Color.WHITE);
+            textLabelView.invalidate();
         }
     }
 

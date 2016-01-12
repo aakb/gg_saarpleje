@@ -25,16 +25,16 @@ import java.util.Map;
 
 public class QRActivity extends Activity {
     private static final String TAG = "QRActivity";
+    private static final int   SCANS_PER_SEC = 3;
 
     private Camera camera;
     private QRPreview qrPreview;
+    private int framesSinceLastScan = 0;
+    private MultiFormatReader multiFormatReader = new MultiFormatReader();
 
-    private static final int   SCANS_PER_SEC = 3;
-    private int                framesSinceLastScan = 0;
-    private int                widthPixels = 640;
-    private int                heightPixels = 360;
-    private MultiFormatReader  multiFormatReader = new MultiFormatReader();
-
+    /**
+     * PreviewCallback.
+     */
     private Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
         /**
          * Preview frame

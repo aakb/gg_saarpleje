@@ -2,7 +2,6 @@ package itk.aakb.dk.gg_saarpleje;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,17 +21,12 @@ import java.util.TimerTask;
 
 public class MemoActivity extends Activity {
     private static final String TAG = "MemoActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
 
-    private Camera camera;
-    private CameraPreview cameraPreview;
     private MediaRecorder mRecorder;
     private TextView durationText;
 
     private Timer timer;
     private int timerExecutions = 0;
-    private int audioLength;
-    private boolean unlimited;
     private boolean recording = false;
 
     private String outputPath;
@@ -55,11 +49,6 @@ public class MemoActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Get number of seconds to record. Defaults to 10 seconds.
-        Intent intent = getIntent();
-        audioLength = intent.getIntExtra("SECONDS", 3);
-        unlimited = intent.getBooleanExtra("UNLIMITED", false);
 
         Log.i(TAG, "Launching memo activity");
 
@@ -195,7 +184,6 @@ public class MemoActivity extends Activity {
 
                         try {
                             stopRecording();
-                            ;
 
                             // Add path to file as result
                             Intent returnIntent = new Intent();
@@ -223,7 +211,7 @@ public class MemoActivity extends Activity {
     private static File getOutputVideoFile() {
         // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FILE_DIRECTORY);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -235,8 +223,7 @@ public class MemoActivity extends Activity {
 
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                "VID_" + timeStamp + ".mp4");
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + "AUD_" + timeStamp + ".mp3");
         return mediaFile;
     }
 }

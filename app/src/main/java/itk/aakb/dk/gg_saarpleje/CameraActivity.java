@@ -23,12 +23,10 @@ import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
     private static final String TAG = "CameraActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
 
     private Camera camera;
     private CameraPreview cameraPreview;
     private TextView countdownText;
-
     private Timer timer;
     private int timerExecutions = 0;
 
@@ -193,7 +191,7 @@ public class CameraActivity extends Activity {
     private static File getOutputImageFile() {
         // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
