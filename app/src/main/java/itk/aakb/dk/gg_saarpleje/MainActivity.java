@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileObserver;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,7 +41,7 @@ public class MainActivity extends Activity {
 
     private ArrayList<String> imagePaths = new ArrayList<>();
     private ArrayList<String> videoPaths = new ArrayList<>();
-    private ArrayList<String> audioPaths = new ArrayList<>();
+    private ArrayList<String> memoPaths = new ArrayList<>();
 
     private String patient = null;
     private String receiver = null;
@@ -54,14 +53,14 @@ public class MainActivity extends Activity {
         // Save the user's current game state
         savedInstanceState.putStringArrayList(STATE_VIDEOS, videoPaths);
         savedInstanceState.putStringArrayList(STATE_PICTURES, imagePaths);
-        savedInstanceState.putStringArrayList(STATE_MEMOS, audioPaths);
+        savedInstanceState.putStringArrayList(STATE_MEMOS, memoPaths);
         savedInstanceState.putString(STATE_PATIENT, patient);
         savedInstanceState.putString(STATE_RECEIVER, receiver);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
     }
-
+                                           
     /**
      * On create.
      *
@@ -90,6 +89,7 @@ public class MainActivity extends Activity {
             // Restore state members from saved instance
             imagePaths = savedInstanceState.getStringArrayList(STATE_PICTURES);
             videoPaths = savedInstanceState.getStringArrayList(STATE_VIDEOS);
+            memoPaths = savedInstanceState.getStringArrayList(STATE_MEMOS);
             patient = savedInstanceState.getString(STATE_PATIENT);
             receiver = savedInstanceState.getString(STATE_RECEIVER);
         } else {
@@ -275,7 +275,7 @@ public class MainActivity extends Activity {
         ArrayList<String> mediaPaths = new ArrayList<>();
         mediaPaths.addAll(imagePaths);
         mediaPaths.addAll(videoPaths);
-        mediaPaths.addAll(audioPaths);
+        mediaPaths.addAll(memoPaths);
 
         Intent intent = new Intent(this, ReportActivity.class);
         intent.putExtra("recipient_email", email);
@@ -291,11 +291,13 @@ public class MainActivity extends Activity {
     private void saveState() {
         String serializedVideoPaths = (new JSONArray(videoPaths)).toString();
         String serializedImagePaths = (new JSONArray(imagePaths)).toString();
+        String serializedMemoPaths = (new JSONArray(memoPaths)).toString();
 
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(STATE_VIDEOS, serializedVideoPaths);
         editor.putString(STATE_PICTURES, serializedImagePaths);
+        editor.putString(STATE_MEMOS, serializedMemoPaths);
         editor.putString(STATE_PATIENT, patient);
         editor.putString(STATE_RECEIVER, receiver);
         editor.apply();
@@ -320,9 +322,11 @@ public class MainActivity extends Activity {
         receiver = sharedPref.getString(STATE_RECEIVER, null);
         String serializedVideoPaths = sharedPref.getString(STATE_VIDEOS, "[]");
         String serializedImagePaths = sharedPref.getString(STATE_PICTURES, "[]");
+        String serializedMemoPaths = sharedPref.getString(STATE_PICTURES, "[]");
 
         imagePaths = new ArrayList<>();
         videoPaths = new ArrayList<>();
+        memoPaths = new ArrayList<>();
 
         try {
             JSONArray jsonArray = new JSONArray(serializedVideoPaths);
@@ -334,6 +338,11 @@ public class MainActivity extends Activity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 imagePaths.add(jsonArray.getString(i));
             }
+
+            jsonArray = new JSONArray(serializedMemoPaths);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                memoPaths.add(jsonArray.getString(i));
+            }
         }
         catch (JSONException e) {
             // ignore
@@ -343,12 +352,9 @@ public class MainActivity extends Activity {
         Log.i(TAG, "Restored receiver: " + receiver);
         Log.i(TAG, "Restored imagePaths: " + imagePaths);
         Log.i(TAG, "Restored videoPaths: " + videoPaths);
+        Log.i(TAG, "Restored memoPaths: " + memoPaths);
 
-        updateTextField(R.id.imageNumber, String.valueOf(imagePaths.size()));
-        updateTextField(R.id.videoNumber, String.valueOf(videoPaths.size()));
-        updateTextField(R.id.memoNumber, String.valueOf((audioPaths.size())));
-        updateTextField(R.id.receiverIdentifier, receiver);
-        updateTextField(R.id.patientIdentifier, patient);
+        updateUI();
     }
 
     /**
@@ -412,16 +418,22 @@ public class MainActivity extends Activity {
         if (requestCode == TAKE_PICTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received image: " + data.getStringExtra("path"));
 
-            processPictureWhenReady(data.getStringExtra("path"));
+            imagePaths.add(data.getStringExtra("path"));
+            saveState();
+            updateUI();
         }
         else if (requestCode == RECORD_VIDEO_CAPTURE_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received video: " + data.getStringExtra("path"));
 
-            processVideoWhenReady(data.getStringExtra("path"));
+            videoPaths.add(data.getStringExtra("path"));
+            saveState();
+            updateUI();
         } else if (requestCode == RECORD_MEMO_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received memo: " + data.getStringExtra("path"));
 
-            processAudioWhenReady(data.getStringExtra("path"));
+            memoPaths.add(data.getStringExtra("path"));
+            saveState();
+            updateUI();
         }
         else if (requestCode == SCAN_PATIENT_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
@@ -429,29 +441,22 @@ public class MainActivity extends Activity {
             patient = data.getStringExtra("result");
 
             saveState();
-
-            TextView text = (TextView) findViewById(R.id.patientIdentifier);
-            text.setText(patient);
-            text.invalidate();
+            updateUI();
         }
         else if (requestCode == SCAN_RECEIVER_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
 
-            String s = data.getStringExtra("result");
+            String mail = data.getStringExtra("result");
 
-            boolean valid = EmailValidator.getInstance().isValid(s);
-
-            if (valid) {
-                receiver = s;
+            // Check for valid email
+            if (EmailValidator.getInstance().isValid(mail)) {
+                receiver = mail;
 
                 saveState();
-
-                TextView text = (TextView) findViewById(R.id.receiverIdentifier);
-                text.setText(receiver);
-                text.invalidate();
+                updateUI();
             }
             else {
-                Toast.makeText(getApplicationContext(), "Invalid receiver: " + s + ". Scan again.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Invalid receiver: " + mail + ". Scan again.", Toast.LENGTH_LONG).show();
             }
         }
         else if (requestCode == FINISH_REPORT_REQUEST && resultCode == RESULT_OK) {
@@ -469,213 +474,23 @@ public class MainActivity extends Activity {
      * @param id id of the text view
      * @param value value to assign
      */
-    private void updateTextField(int id, String value) {
+    private void updateTextField(int id, String value, Integer color) {
         TextView v = (TextView) findViewById(id);
         v.setText(value);
+        if (color != null) {
+            v.setTextColor(color);
+        }
         v.invalidate();
    }
 
     /**
-     * Update the UI when a step has been completed.
-     *
-     * @param step that step that has been completed.
+     * Update the UI.
      */
-    private void setStepAccept(int step) {
-        Log.i(TAG, "Step " + step + " has been completed.");
-
-        TextView textCountView = null;
-        TextView textLabelView = null;
-
-        if (step == 0) {
-            textCountView = (TextView) findViewById(R.id.imageNumber);
-            textCountView.setText(String.valueOf(imagePaths.size()));
-        }
-        else if (step == 1) {
-            textCountView = (TextView) findViewById(R.id.videoNumber);
-            textCountView.setText(String.valueOf(videoPaths.size()));
-
-            textLabelView = (TextView) findViewById(R.id.videoLabel);
-        } else if (step == 2) {
-            textCountView = (TextView) findViewById(R.id.memoNumber);
-            textCountView.setText(String.valueOf(audioPaths.size()));
-
-            textLabelView = (TextView) findViewById(R.id.memoLabel);
-        }
-
-        if (textCountView != null) {
-            textCountView.setTextColor(Color.WHITE);
-            textCountView.invalidate();
-        }
-        if (textLabelView != null) {
-            textLabelView.setTextColor(Color.WHITE);
-            textLabelView.invalidate();
-        }
-    }
-
-    /**
-     * Process the picture.
-     *
-     * @param picturePath path to the image.
-     */
-    private void processPictureWhenReady(final String picturePath) {
-        final File pictureFile = new File(picturePath);
-
-        if (pictureFile.exists()) {
-            // The picture is ready. We are not gonna work with it, but now we know it has been
-            // saved to disc.
-
-            imagePaths.add(picturePath);
-
-            saveState();
-
-            setStepAccept(0);
-
-            Log.i(TAG, "Before picture ready, with path: " + picturePath);
-        }
-        else {
-            final File parentDirectory = pictureFile.getParentFile();
-            FileObserver observer = new FileObserver(parentDirectory.getPath(),
-                    FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
-                // Protect against additional pending events after CLOSE_WRITE
-                // or MOVED_TO is handled.
-                private boolean isFileWritten;
-
-                @Override
-                public void onEvent(int event, String path) {
-                    if (!isFileWritten) {
-                        // For safety, make sure that the file that was created in
-                        // the directory is actually the one that we're expecting.
-                        File affectedFile = new File(parentDirectory, path);
-                        isFileWritten = affectedFile.equals(pictureFile);
-
-                        if (isFileWritten) {
-                            stopWatching();
-
-                            // Now that the file is ready, recursively call
-                            // processPictureWhenReady again (on the UI thread).
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    processPictureWhenReady(picturePath);
-                                }
-                            });
-                        }
-                    }
-                }
-            };
-            observer.startWatching();
-        }
-    }
-
-
-    /**
-     * Process the video.
-     *
-     * @param videoPath path to the image.
-     */
-    private void processVideoWhenReady(final String videoPath) {
-        final File videoFile = new File(videoPath);
-
-        if (videoFile.exists()) {
-            // The video is ready. We are not gonna work with it, but now we know it has been
-            // saved to disc.
-            videoPaths.add(videoPath);
-
-            saveState();
-
-            Log.i(TAG, "Video ready, with path: " + videoPath);
-
-            setStepAccept(1);
-        }
-        else {
-            final File parentDirectory = videoFile.getParentFile();
-            FileObserver observer = new FileObserver(parentDirectory.getPath(),
-                    FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
-                // Protect against additional pending events after CLOSE_WRITE
-                // or MOVED_TO is handled.
-                private boolean isFileWritten;
-
-                @Override
-                public void onEvent(int event, String path) {
-                    if (!isFileWritten) {
-                        // For safety, make sure that the file that was created in
-                        // the directory is actually the one that we're expecting.
-                        File affectedFile = new File(parentDirectory, path);
-                        isFileWritten = affectedFile.equals(videoFile);
-
-                        if (isFileWritten) {
-                            stopWatching();
-
-                            // Now that the file is ready, recursively call
-                            // processPictureWhenReady again (on the UI thread).
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    processVideoWhenReady(videoPath);
-                                }
-                            });
-                        }
-                    }
-                }
-            };
-            observer.startWatching();
-        }
-    }
-
-    /**
-     * Process the audio.
-     *
-     * @param audioPath path to the image.
-     */
-    private void processAudioWhenReady(final String audioPath) {
-        final File audioFile = new File(audioPath);
-
-        if (audioFile.exists()) {
-            // The video is ready. We are not gonna work with it, but now we know it has been
-            // saved to disc.
-            audioPaths.add(audioPath);
-
-            Log.i(TAG, "Audio ready, with path: " + audioPath);
-
-            setStepAccept(2);
-        } else {
-            // The file does not exist yet. Before starting the file observer, you
-            // can update your UI to let the user know that the application is
-            // waiting for the picture (for example, by displaying the thumbnail
-            // image and a progress indicator).
-            // @TODO: Add progress bar. Return to main menu when video is ready.
-
-            final File parentDirectory = audioFile.getParentFile();
-            FileObserver observer = new FileObserver(parentDirectory.getPath(),
-                    FileObserver.CLOSE_WRITE | FileObserver.MOVED_TO) {
-                // Protect against additional pending events after CLOSE_WRITE
-                // or MOVED_TO is handled.
-                private boolean isFileWritten;
-
-                @Override
-                public void onEvent(int event, String path) {
-                    if (!isFileWritten) {
-                        // For safety, make sure that the file that was created in
-                        // the directory is actually the one that we're expecting.
-                        File affectedFile = new File(parentDirectory, path);
-                        isFileWritten = affectedFile.equals(audioFile);
-
-                        if (isFileWritten) {
-                            stopWatching();
-
-                            // Now that the file is ready, recursively call
-                            // processPictureWhenReady again (on the UI thread).
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    processAudioWhenReady(audioPath);
-                                }
-                            });
-                        }
-                    }
-                }
-            };
-            observer.startWatching();
-        }
+    private void updateUI() {
+        updateTextField(R.id.imageNumber, String.valueOf(imagePaths.size()), imagePaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.videoNumber, String.valueOf(videoPaths.size()), videoPaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.memoNumber, String.valueOf(memoPaths.size()), memoPaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.receiverIdentifier, receiver, receiver != null ? Color.WHITE : null);
+        updateTextField(R.id.patientIdentifier, patient, patient != null ? Color.WHITE : null);
     }
 }
