@@ -21,7 +21,6 @@ import java.util.TimerTask;
 
 public class MemoActivity extends Activity {
     private static final String TAG = "MemoActivity";
-    private static final String FILE_DIRECTORY = "saarpleje";
 
     private MediaRecorder mRecorder;
     private TextView durationText;

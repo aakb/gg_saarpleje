@@ -1,27 +1,11 @@
 <resources>
     <string name="app_name">Saarpleje</string>
-    <string name="voice_command_start_program">Start program</string>
-    <string name="voice_command_menu">Say \"Okay, Glass\" to open menu</string>
-    <string name="finish">Finish report</string>
-    <string name="take_image">Take image</string>
-    <string name="record_video">Record video</string>
     <string name="countdown_default">...</string>
     <string name="title_activity_video">VideoActivity</string>
     <string name="progress_image">Images</string>
     <string name="progress_videos">Videos</string>
-    <string name="thirty_seconds">thirty seconds</string>
-    <string name="one_minute">one minute</string>
-    <string name="two_minutes">two minutes</string>
-    <string name="four_minutes">four minutes</string>
-    <string name="record_unlimited">custom length</string>
     <string name="patient">Patient: </string>
     <string name="receiver">Receiver: </string>
-    <string name="cancel">cancel and exit</string>
-    <string name="confirm_cancel">yes</string>
-    <string name="abort_cancel">no</string>
-    <string name="scan_patient">scan patient</string>
-    <string name="add_receiver">add receiver</string>
-    <string name="finish_report">Finish report</string>
     <string name="no_media_files">No media files</string>
     <plurals name="uploading_n_files">
         <item quantity="one">Uploading 1 file</item>
@@ -29,5 +13,21 @@
     </plurals>
     <string name="progress_memos">Memos</string>
     <string name="recording_memo">Recording memo</string>
-    <string name="record_memo">Dictate memo</string>
+    <string name="voice_command_start_program">Start program</string>
+
+    <string name="start_memo">write memo</string>
+    <string name="finish">finish report</string>
+    <string name="take_image">take image</string>
+    <string name="record_video">record video</string>
+    <string name="thirty_seconds">thirty seconds</string>
+    <string name="one_minute">one minute</string>
+    <string name="two_minutes">two minutes</string>
+    <string name="four_minutes">four minutes</string>
+    <string name="record_unlimited">custom length</string>
+    <string name="cancel">cancel and exit</string>
+    <string name="confirm_cancel">yes</string>
+    <string name="abort_cancel">no</string>
+    <string name="scan_patient">scan patient</string>
+    <string name="add_receiver">add receiver</string>
+    <string name="finish_report">finish report</string>
 </resources>
