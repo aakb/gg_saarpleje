@@ -73,7 +73,7 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="@string/progress_image"
-                android:id="@+id/beforeImageLabel"
+                android:id="@+id/imageLabel"
                 android:layout_marginLeft="10px"
                 android:textColor="#898989" />
         </LinearLayout>

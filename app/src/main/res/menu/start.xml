@@ -6,5 +6,5 @@
         android:title="@string/scan_patient" />
     <item
         android:id="@+id/add_receiver_menu_item"
-        android:title="@string/add_receiver" />
+        android:title="@string/add_email" />
 </menu>
