@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -28,7 +29,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     private static final String TWOHYPHENS = "--";
     private static final String BOUNDARY = "********";
 
-    private TextView info;
+    private TextView progress;
     private File[] mediaFiles;
     private String senderAddress;
     private String proxyUrl;
@@ -37,7 +38,7 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_report);
+        setContentView(R.layout.activity_finish_report);
 
         Intent intent = getIntent();
         mediaFilePaths = intent.getStringArrayListExtra("media_files");
@@ -50,12 +51,11 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
             properties.load(inputStream);
             senderAddress = properties.getProperty("SenderAddress");
             proxyUrl = properties.getProperty("ProxyUrl");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Log.e(TAG, e.toString());
         }
 
-        info = (TextView) findViewById(R.id.text_info);
+        progress = (TextView) findViewById(R.id.text_upload_progress);
 
         Log.i(TAG, "onCreate done.");
 
@@ -154,27 +154,16 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
             return streamFiles(url, files, extras);
         }
 
-        @Override
-        protected void onProgressUpdate(Object... values) {
-            super.onProgressUpdate(values);
-
-            final Object[] args = values;
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    appendInfo((String) args[0], Arrays.copyOfRange(args, 1, args.length));
-                }
-            });
-
-            Log.e(TAG, String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length)));
-        }
-
         private void writeFiles(DataOutputStream out, File[] files) throws Throwable {
-            int count = 0;
-            for (File file : files) {
-                count++;
+            int totalBytes = 0;
+            int bytesReadTotal = 0;
+            double percent = 0.0;
 
-                onProgressUpdate("Writing file %d of %d", count, files.length);
+            for (File file : files) {
+                totalBytes += file.length();
+            }
+
+            for (File file : files) {
 
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
@@ -186,9 +175,14 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 int bufferSize = 3 * 1024; // http://stackoverflow.com/a/7920834
                 byte[] buffer = new byte[bufferSize];
                 int bytesRead = fileInputStream.read(buffer);
+                bytesReadTotal += bytesRead;
                 while (bytesRead > 0) {
                     out.write(Base64.encode(buffer, Base64.DEFAULT));
                     bytesRead = fileInputStream.read(buffer);
+                    bytesReadTotal += bytesRead;
+
+                    percent = ((double) bytesReadTotal / totalBytes) * 100;
+                    updateProgress(percent);
                 }
 
                 out.writeBytes(LINEEND);
@@ -199,24 +193,13 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
         }
     }
 
-    private void setInfo(final String format, final Object... args) {
+
+    private void updateProgress(final double percent) {
+        final String p = String.valueOf((int) Math.round(percent));
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                info.setText(String.format(format, args));
-            }
-        });
-    }
-
-    private void setInfo(int id) {
-        setInfo(getString(id));
-    }
-
-    private void appendInfo(final String format, final Object... args) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                info.append("\n" + String.format(format, args));
+                progress.setText(p + "%");
             }
         });
     }
@@ -229,38 +212,30 @@ public class ReportActivity extends Activity implements MediaHandlerListener {
                 mediaFiles[i] = new File(path);
                 i++;
             }
-        }
-        else {
+        } else {
             File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
 
             mediaFiles = mediaStorageDir.listFiles();
         }
 
 
-        if (mediaFiles == null || mediaFiles.length == 0) {
-            setInfo(R.string.no_media_files);
-        } else {
-            for (File file : mediaFiles) {
-                Log.i(TAG, String.format("%s: %d", file.getName(), file.length()));
-            }
-
-            setInfo(getResources().getQuantityString(R.plurals.uploading_n_files, mediaFiles.length, mediaFiles.length));
-
-            new MediaHandler(this).execute(proxyUrl, mediaFiles, getIntent().getExtras());
+        for (File file : mediaFiles) {
+            Log.i(TAG, String.format("%s: %d", file.getName(), file.length()));
         }
+
+        new MediaHandler(this).execute(proxyUrl, mediaFiles, getIntent().getExtras());
     }
 
     @Override
     public void onResult(boolean success) {
-        Log.e(TAG, "onResult: " + success);
+        Log.i(TAG, "onResult: " + success);
         if (success) {
             // Add path to file as result
             Intent returnIntent = new Intent();
             setResult(RESULT_OK, returnIntent);
 
             finish();
-        }
-        else {
+        } else {
             finish();
         }
     }

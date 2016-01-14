@@ -476,7 +476,9 @@ public class MainActivity extends Activity {
      */
     private void updateTextField(int id, String value, Integer color) {
         TextView v = (TextView) findViewById(id);
-        v.setText(value);
+        if(value != null) {
+            v.setText(value);
+        }
         if (color != null) {
             v.setTextColor(color);
         }
@@ -488,8 +490,14 @@ public class MainActivity extends Activity {
      */
     private void updateUI() {
         updateTextField(R.id.imageNumber, String.valueOf(imagePaths.size()), imagePaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.imageLabel, null, imagePaths.size() > 0 ? Color.WHITE : null);
+
         updateTextField(R.id.videoNumber, String.valueOf(videoPaths.size()), videoPaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.videoLabel, null, videoPaths.size() > 0 ? Color.WHITE : null);
+
         updateTextField(R.id.memoNumber, String.valueOf(memoPaths.size()), memoPaths.size() > 0 ? Color.WHITE : null);
+        updateTextField(R.id.memoLabel, null, memoPaths.size() > 0 ? Color.WHITE : null);
+
         updateTextField(R.id.receiverIdentifier, receiver, receiver != null ? Color.WHITE : null);
         updateTextField(R.id.patientIdentifier, patient, patient != null ? Color.WHITE : null);
     }
