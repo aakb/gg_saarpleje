@@ -1,14 +1,32 @@
 <resources>
     <string name="app_name">Saarpleje</string>
-    <string name="voice_command_start_program">start program</string>
-    <string name="voice_command_menu">Say \"Okay, Glass\" to open menu</string>
-    <string name="finish">finish report</string>
-    <string name="take_before_image">take before image</string>
-    <string name="take_after_image">take after image</string>
-    <string name="record_video">record video</string>
     <string name="countdown_default">...</string>
-    <string name="title_activity_video">VideoActivity</string>
-    <string name="progress_before_image">Before image</string>
-    <string name="progress_after_image">After image</string>
+    <string name="progress_image">Images</string>
     <string name="progress_videos">Videos</string>
+    <string name="patient">Patient: </string>
+    <string name="receiver">Email: </string>
+    <string name="no_media_files">No media files</string>
+    <plurals name="uploading_n_files">
+        <item quantity="one">Uploading 1 file</item>
+        <item quantity="other">Uploading %d</item>
+    </plurals>
+    <string name="progress_memos">Memos</string>
+    <string name="recording_memo">Recording memo</string>
+
+    <string name="voice_command_start_program">Start program</string>
+    <string name="start_memo">Dictate memo</string>
+    <string name="finish">Finish report</string>
+    <string name="take_image">Take image</string>
+    <string name="record_video">Record video</string>
+    <string name="thirty_seconds">Thirty seconds</string>
+    <string name="one_minute">One minute</string>
+    <string name="two_minutes">Two minutes</string>
+    <string name="four_minutes">Four minutes</string>
+    <string name="record_unlimited">Custom length</string>
+    <string name="cancel">Cancel and exit</string>
+    <string name="confirm_cancel">Yes</string>
+    <string name="abort_cancel">No</string>
+    <string name="scan_patient">Scan patient</string>
+    <string name="add_email">Add email</string>
+    <string name="sending_report">Sending report</string>
 </resources>
