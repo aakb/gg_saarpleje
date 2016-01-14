@@ -60,7 +60,7 @@ public class MainActivity extends Activity {
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
     }
-                                           
+
     /**
      * On create.
      *
@@ -322,7 +322,7 @@ public class MainActivity extends Activity {
         receiver = sharedPref.getString(STATE_RECEIVER, null);
         String serializedVideoPaths = sharedPref.getString(STATE_VIDEOS, "[]");
         String serializedImagePaths = sharedPref.getString(STATE_PICTURES, "[]");
-        String serializedMemoPaths = sharedPref.getString(STATE_PICTURES, "[]");
+        String serializedMemoPaths = sharedPref.getString(STATE_MEMOS, "[]");
 
         imagePaths = new ArrayList<>();
         videoPaths = new ArrayList<>();
@@ -436,7 +436,7 @@ public class MainActivity extends Activity {
             updateUI();
         }
         else if (requestCode == SCAN_PATIENT_REQUEST && resultCode == RESULT_OK) {
-            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
+            Log.i(TAG, "Received patient QR: " + data.getStringExtra("result"));
 
             patient = data.getStringExtra("result");
 
@@ -444,7 +444,7 @@ public class MainActivity extends Activity {
             updateUI();
         }
         else if (requestCode == SCAN_RECEIVER_REQUEST && resultCode == RESULT_OK) {
-            Log.i(TAG, "Received QR: " + data.getStringExtra("result"));
+            Log.i(TAG, "Received receiver QR: " + data.getStringExtra("result"));
 
             String mail = data.getStringExtra("result");
 
