@@ -18,15 +18,9 @@
     <string name="finish">Finish report</string>
     <string name="take_image">Take image</string>
     <string name="record_video">Record video</string>
-    <string name="thirty_seconds">Thirty seconds</string>
-    <string name="one_minute">One minute</string>
-    <string name="two_minutes">Two minutes</string>
-    <string name="four_minutes">Four minutes</string>
-    <string name="record_unlimited">Custom length</string>
     <string name="cancel">Cancel and exit</string>
     <string name="confirm_cancel">Yes</string>
     <string name="abort_cancel">No</string>
     <string name="scan_patient">Scan patient</string>
-    <string name="add_email">Add email</string>
     <string name="sending_report">Sending report</string>
 </resources>

@@ -29,6 +29,7 @@ public class CameraActivity extends Activity {
     private TextView countdownText;
     private Timer timer;
     private int timerExecutions = 0;
+    private String filePrefix;
 
     /**
      * On create.
@@ -40,6 +41,10 @@ public class CameraActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Log.i(TAG, "Launching activity");
+
+        // Get file prefix
+        Intent intent = getIntent();
+        filePrefix = intent.getStringExtra("FILE_PREFIX");
 
         setContentView(R.layout.activity_camera_countdown);
 
@@ -188,10 +193,10 @@ public class CameraActivity extends Activity {
     /**
      * Create a File for saving an image
      */
-    private static File getOutputImageFile() {
-        // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
+    private File getOutputImageFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY + File.separator + filePrefix);
 
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
+        Log.i(TAG, mediaStorageDir.getAbsolutePath());
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -202,10 +207,9 @@ public class CameraActivity extends Activity {
         }
 
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_" + timeStamp + ".jpg");
-
+                filePrefix + "_image_" + timeStamp + ".jpg");
         return mediaFile;
     }
 }

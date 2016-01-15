@@ -30,6 +30,7 @@ public class MemoActivity extends Activity {
     private boolean recording = false;
 
     private String outputPath;
+    private String filePrefix;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -51,6 +52,10 @@ public class MemoActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Log.i(TAG, "Launching memo activity");
+
+        // Get file prefix
+        Intent intent = getIntent();
+        filePrefix = intent.getStringExtra("FILE_PREFIX");
 
         setContentView(R.layout.activity_record_memo);
 
@@ -208,10 +213,8 @@ public class MemoActivity extends Activity {
     /**
      * Create a File for saving a video
      */
-    private static File getOutputVideoFile() {
-        // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
+    private File getOutputVideoFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY + File.separator + filePrefix);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -222,8 +225,9 @@ public class MemoActivity extends Activity {
         }
 
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File mediaFile = new File(mediaStorageDir.getPath() + File.separator + "AUD_" + timeStamp + ".mp3");
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                filePrefix + "_audio_" + timeStamp + ".mp3");
         return mediaFile;
     }
 }
