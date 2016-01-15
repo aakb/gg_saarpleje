@@ -11,32 +11,26 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.glass.view.WindowUtils;
 
-import org.apache.commons.validator.routines.EmailValidator;
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class MainActivity extends Activity {
-    public static final String FILE_DIRECTORY = "saarpleje";
+    public static final String FILE_DIRECTORY = "Saarpleje";
 
     private static final String TAG = "saarpleje MainActivity";
     private static final int TAKE_PICTURE_REQUEST = 101;
     private static final int RECORD_VIDEO_CAPTURE_REQUEST = 102;
     private static final int SCAN_PATIENT_REQUEST = 103;
-    private static final int SCAN_RECEIVER_REQUEST = 104;
-    private static final int FINISH_REPORT_REQUEST = 105;
-    private static final int RECORD_MEMO_REQUEST = 106;
+    private static final int RECORD_MEMO_REQUEST = 104;
     private static final String STATE_VIDEOS = "videos";
     private static final String STATE_PICTURES = "pictures";
     private static final String STATE_PATIENT = "patient";
-    private static final String STATE_RECEIVER = "receiver";
     private static final String STATE_MEMOS = "memos";
 
     private ArrayList<String> imagePaths = new ArrayList<>();
@@ -44,7 +38,6 @@ public class MainActivity extends Activity {
     private ArrayList<String> memoPaths = new ArrayList<>();
 
     private String patient = null;
-    private String receiver = null;
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -55,7 +48,6 @@ public class MainActivity extends Activity {
         savedInstanceState.putStringArrayList(STATE_PICTURES, imagePaths);
         savedInstanceState.putStringArrayList(STATE_MEMOS, memoPaths);
         savedInstanceState.putString(STATE_PATIENT, patient);
-        savedInstanceState.putString(STATE_RECEIVER, receiver);
 
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
@@ -78,10 +70,6 @@ public class MainActivity extends Activity {
         // Set the main activity view.
         setContentView(R.layout.activity_layout);
 
-        // for debug: list all files in directory
-        // @TODO: remove
-        getDirectoryListing();
-
         // Check whether we're recreating a previously destroyed instance
         if (savedInstanceState != null) {
             Log.i(TAG, "Restoring savedInstance");
@@ -91,13 +79,21 @@ public class MainActivity extends Activity {
             videoPaths = savedInstanceState.getStringArrayList(STATE_VIDEOS);
             memoPaths = savedInstanceState.getStringArrayList(STATE_MEMOS);
             patient = savedInstanceState.getString(STATE_PATIENT);
-            receiver = savedInstanceState.getString(STATE_RECEIVER);
         } else {
             Log.i(TAG, "Restoring state");
 
             // Probably initialize members with default values for a new instance
             restoreState();
         }
+
+        Log.i(TAG, "------------");
+
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
+        Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
+
+        getDirectoryListing(f);
+
+        Log.i(TAG, "------------");
     }
 
     /**
@@ -111,7 +107,7 @@ public class MainActivity extends Activity {
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
-            if (receiver != null && patient != null) {
+            if (patient != null) {
                 getMenuInflater().inflate(R.menu.main, menu);
             }
             else {
@@ -133,7 +129,7 @@ public class MainActivity extends Activity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (receiver != null && patient != null) {
+        if (patient != null) {
             getMenuInflater().inflate(R.menu.main, menu);
         }
         else {
@@ -166,47 +162,13 @@ public class MainActivity extends Activity {
                 case R.id.record_video_menu_item:
                     Log.i(TAG, "menu: record video");
 
-                    break;
-                case R.id.record_video_menu_item_30_seconds:
-                    Log.i(TAG, "menu: record 30 seconds video");
-
-                    recordVideo(30);
-
-                    break;
-                case R.id.record_video_menu_item_1_minute:
-                    Log.i(TAG, "menu: record 1 minute video");
-
-                    recordVideo(60);
-
-                    break;
-                case R.id.record_video_menu_item_2_minutes:
-                    Log.i(TAG, "menu: record 2 minutes video");
-
-                    recordVideo(120);
-
-                    break;
-                case R.id.record_video_menu_item_4_minutes:
-                    Log.i(TAG, "menu: record 4 minutes video");
-
-                    recordVideo(240);
-
-                    break;
-                case R.id.record_video_menu_item_unlimited:
-                    Log.i(TAG, "menu: record unlimited video");
-
-                    recordVideo(true);
+                    recordVideo();
 
                     break;
                 case R.id.record_memo_menu_item:
                     Log.i(TAG, "menu: record memo");
 
                     recordMemo();
-
-                    break;
-                case R.id.finish_menu_item:
-                    Log.i(TAG, "menu: finish report");
-
-                    finishReport(receiver, "Sårplejerapport – " + new Date());
 
                     break;
                 case R.id.confirm_cancel:
@@ -223,9 +185,9 @@ public class MainActivity extends Activity {
                     startActivityForResult(scanPatientIntent, SCAN_PATIENT_REQUEST);
 
                     break;
-                case R.id.add_receiver_menu_item:
-                    Intent addReceiverIntent = new Intent(this, QRActivity.class);
-                    startActivityForResult(addReceiverIntent, SCAN_RECEIVER_REQUEST);
+                case R.id.finish_menu_item:
+                    deleteState();
+                    finish();
 
                     break;
                 default:
@@ -239,50 +201,31 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Launch the record memo intent.
+     *
+     */
+    private void recordMemo() {
+        Intent intent = new Intent(this, MemoActivity.class);
+        intent.putExtra("FILE_PREFIX", patient);
+        startActivityForResult(intent, RECORD_MEMO_REQUEST);
+    }
+
+    /**
      * Launch the image capture intent.
      */
     private void takePicture() {
         Intent intent = new Intent(this, CameraActivity.class);
+        intent.putExtra("FILE_PREFIX", patient);
         startActivityForResult(intent, TAKE_PICTURE_REQUEST);
     }
 
     /**
      * Launch the record video intent.
-     *
-     * @param unlimited whether or not the video should be unlimited.
      */
-    private void recordVideo(boolean unlimited) {
+    private void recordVideo() {
         Intent intent = new Intent(this, VideoActivity.class);
-        intent.putExtra("UNLIMITED", unlimited);
+        intent.putExtra("FILE_PREFIX", patient);
         startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
-    }
-
-    /**
-     * Launch the record video intent.
-     *
-     * @param duration the duration of the video to record
-     */
-    private void recordVideo(int duration) {
-        Intent intent = new Intent(this, VideoActivity.class);
-        intent.putExtra("SECONDS", duration);
-        startActivityForResult(intent, RECORD_VIDEO_CAPTURE_REQUEST);
-    }
-
-    /**
-     * Launch the finish report intent.
-     */
-    private void finishReport(String email, String subject) {
-        ArrayList<String> mediaPaths = new ArrayList<>();
-        mediaPaths.addAll(imagePaths);
-        mediaPaths.addAll(videoPaths);
-        mediaPaths.addAll(memoPaths);
-
-        Intent intent = new Intent(this, ReportActivity.class);
-        intent.putExtra("recipient_email", email);
-        intent.putExtra("subject", subject);
-        intent.putExtra("media_files", mediaPaths);
-        intent.putExtra("text", "Patient: " + patient);
-        startActivityForResult(intent, FINISH_REPORT_REQUEST);
     }
 
     /*
@@ -299,7 +242,6 @@ public class MainActivity extends Activity {
         editor.putString(STATE_PICTURES, serializedImagePaths);
         editor.putString(STATE_MEMOS, serializedMemoPaths);
         editor.putString(STATE_PATIENT, patient);
-        editor.putString(STATE_RECEIVER, receiver);
         editor.apply();
     }
 
@@ -319,7 +261,6 @@ public class MainActivity extends Activity {
     private void restoreState() {
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
         patient = sharedPref.getString(STATE_PATIENT, null);
-        receiver = sharedPref.getString(STATE_RECEIVER, null);
         String serializedVideoPaths = sharedPref.getString(STATE_VIDEOS, "[]");
         String serializedImagePaths = sharedPref.getString(STATE_PICTURES, "[]");
         String serializedMemoPaths = sharedPref.getString(STATE_MEMOS, "[]");
@@ -349,7 +290,6 @@ public class MainActivity extends Activity {
         }
 
         Log.i(TAG, "Restored patient: " + patient);
-        Log.i(TAG, "Restored receiver: " + receiver);
         Log.i(TAG, "Restored imagePaths: " + imagePaths);
         Log.i(TAG, "Restored videoPaths: " + videoPaths);
         Log.i(TAG, "Restored memoPaths: " + memoPaths);
@@ -361,7 +301,7 @@ public class MainActivity extends Activity {
      * Empty the directory.
      */
     private void cleanDirectory() {
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), FILE_DIRECTORY);
         Log.i(TAG, "Cleaning directory: " + f.getAbsolutePath());
 
         File[] files = f.listFiles();
@@ -379,17 +319,17 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * List all files in FILE_DIRECTORY.
+     * List all files in f.
+     *
+     * @param f file to list
      */
-    private void getDirectoryListing() {
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
-        Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
-
+    private void getDirectoryListing(File f) {
         File[] files = f.listFiles();
         if (files != null && files.length > 0) {
             for (File inFile : files) {
                 if (inFile.isDirectory()) {
-                    Log.i(TAG, inFile + "(dir)");
+                    Log.i(TAG, "(dir) " + inFile);
+                    getDirectoryListing(inFile);
                 } else {
                     Log.i(TAG, "" + inFile);
                 }
@@ -397,15 +337,6 @@ public class MainActivity extends Activity {
         } else {
             Log.i(TAG, "directory empty or does not exist.");
         }
-    }
-
-    /**
-     * Launch the record memo intent.
-     *
-     */
-    private void recordMemo() {
-        Intent intent = new Intent(this, MemoActivity.class);
-        startActivityForResult(intent, RECORD_MEMO_REQUEST);
     }
 
     /**
@@ -443,28 +374,6 @@ public class MainActivity extends Activity {
             saveState();
             updateUI();
         }
-        else if (requestCode == SCAN_RECEIVER_REQUEST && resultCode == RESULT_OK) {
-            Log.i(TAG, "Received receiver QR: " + data.getStringExtra("result"));
-
-            String mail = data.getStringExtra("result");
-
-            // Check for valid email
-            if (EmailValidator.getInstance().isValid(mail)) {
-                receiver = mail;
-
-                saveState();
-                updateUI();
-            }
-            else {
-                Toast.makeText(getApplicationContext(), "Invalid receiver: " + mail + ". Scan again.", Toast.LENGTH_LONG).show();
-            }
-        }
-        else if (requestCode == FINISH_REPORT_REQUEST && resultCode == RESULT_OK) {
-            cleanDirectory();
-            deleteState();
-            Toast.makeText(getApplicationContext(), "Report sent.", Toast.LENGTH_LONG).show();
-            finish();
-        }
 
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -473,6 +382,7 @@ public class MainActivity extends Activity {
      * Update a ui text view.
      * @param id id of the text view
      * @param value value to assign
+     * @param color the color to set for the text field
      */
     private void updateTextField(int id, String value, Integer color) {
         TextView v = (TextView) findViewById(id);
@@ -498,7 +408,6 @@ public class MainActivity extends Activity {
         updateTextField(R.id.memoNumber, String.valueOf(memoPaths.size()), memoPaths.size() > 0 ? Color.WHITE : null);
         updateTextField(R.id.memoLabel, null, memoPaths.size() > 0 ? Color.WHITE : null);
 
-        updateTextField(R.id.receiverIdentifier, receiver, receiver != null ? Color.WHITE : null);
         updateTextField(R.id.patientIdentifier, patient, patient != null ? Color.WHITE : null);
     }
 }

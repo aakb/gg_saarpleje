@@ -34,7 +34,7 @@ public class VideoActivity extends Activity {
 
     private Timer timer;
     private int timerExecutions = 0;
-    private int videoLength;
+    private String filePrefix;
     private boolean recording = false;
     private String outputPath;
     private SensorManager mSensorManager;
@@ -56,12 +56,11 @@ public class VideoActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Get number of seconds to record. Defaults to 10 seconds.
-        Intent intent = getIntent();
-        videoLength = intent.getIntExtra("SECONDS", 10);
-        boolean unlimited = intent.getBooleanExtra("UNLIMITED", false);
-
         Log.i(TAG, "Launching video activity");
+
+        // Get file prefix
+        Intent intent = getIntent();
+        filePrefix = intent.getStringExtra("FILE_PREFIX");
 
         setContentView(R.layout.activity_camera_video);
 
@@ -83,19 +82,14 @@ public class VideoActivity extends Activity {
         // Reset timer executions.
         timerExecutions = 0;
 
-        if (unlimited) {
-            mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-            mSensorManager.registerListener(mSensorEventListener, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-            mSensorManager.registerListener(mSensorEventListener, mMagnetometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(mSensorEventListener, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(mSensorEventListener, mMagnetometer, SensorManager.SENSOR_DELAY_UI);
 
-            launchUnlimitedVideo();
-        }
-        else {
-            launchAutoVideo();
-        }
+        launchUnlimitedVideo();
     }
 
     private void launchUnlimitedVideo() {
@@ -185,129 +179,6 @@ public class VideoActivity extends Activity {
                                     durationText.setText(timerExecutions + " sec");
                                 }
                             });
-                        }
-                    }, 1000, 1000);
-                }
-            }, 1000);
-        }
-        catch (IllegalStateException e) {
-            Log.d(TAG, "IllegalStateException preparing MediaRecorder (" + e.getCause() + "): " + e.getMessage());
-            releaseMediaRecorder();
-            releaseCamera();
-            finish();
-        }
-        catch (Exception e) {
-            Log.d(TAG, "Exception preparing MediaRecorder: " + e.getMessage());
-            releaseMediaRecorder();
-            releaseCamera();
-            finish();
-        }
-    }
-
-    /**
-     * Start process to take 10 s video.
-     */
-    private void launchAutoVideo() {
-        durationText.setText(videoLength + " sec");
-
-        // Catch all errors, and release camera on error.
-        try {
-            Log.i(TAG, "start preparing video recording");
-
-            Log.i(TAG, "Setting camera hint");
-            Camera.Parameters params = camera.getParameters();
-            params.setRecordingHint(true);
-            camera.setParameters(params);
-
-            Log.i(TAG, "new media recorder");
-            mediaRecorder = new MediaRecorder();
-
-            Log.i(TAG, "setting up error listener");
-            mediaRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
-                public void onError(MediaRecorder mediarecorder1, int k, int i1) {
-                    Log.e(TAG, String.format("Media Recorder error: k=%d, i1=%d", k, i1));
-                }
-
-            });
-
-            // Step 1: Unlock and set camera to MediaRecorder. Clear preview.
-            Log.i(TAG, "unlock and set camera to MediaRecorder");
-            camera.unlock();
-            mediaRecorder.setCamera(camera);
-
-            // Step 2: Set sources
-            Log.i(TAG, "set sources");
-            mediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-            mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-
-            // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
-            Log.i(TAG, "set camcorder profile");
-            mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-
-            // Step 4: Set output file
-            Log.i(TAG, "set output file");
-            outputPath = getOutputVideoFile().toString();
-            mediaRecorder.setOutputFile(outputPath);
-
-            (new Timer()).schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        // Step 5: Set the preview output
-                        Log.i(TAG, "set preview");
-                        mediaRecorder.setPreviewDisplay(cameraPreview.getHolder().getSurface());
-
-                        Log.i(TAG, "finished configuration.");
-
-                        // Step 6: Prepare configured MediaRecorder
-                        mediaRecorder.prepare();
-                    }
-                    catch (IOException e) {
-                        Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
-                        releaseMediaRecorder();
-                        releaseCamera();
-                        finish();
-                    }
-
-                    Log.i(TAG, "prepare successful");
-
-                    // Camera is available and unlocked, MediaRecorder is prepared,
-                    // now you can start recording
-                    mediaRecorder.start();
-
-                    Log.i(TAG, "is recording");
-
-                    // Count down from videoLength seconds, then take picture.
-                    timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            timerExecutions++;
-
-                            Log.i(TAG, "" + timerExecutions);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    durationText.setText((videoLength - timerExecutions) + " sec");
-                                }
-                            });
-
-                            if (timerExecutions >= videoLength) {
-                                cancel();
-
-                                mediaRecorder.stop();  // stop the recording
-                                releaseMediaRecorder(); // release the MediaRecorder object
-                                releaseCamera();
-
-                                // Add path to file as result
-                                Intent returnIntent = new Intent();
-                                returnIntent.putExtra("path", outputPath);
-                                setResult(RESULT_OK, returnIntent);
-
-                                // Finish activity
-                                finish();
-                            }
                         }
                     }, 1000, 1000);
                 }
@@ -481,10 +352,8 @@ public class VideoActivity extends Activity {
     /**
      * Create a File for saving a video
      */
-    private static File getOutputVideoFile() {
-        // @TODO: To be safe, you should check that the SDCard is mounted using Environment.getExternalStorageState() before doing this.
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY);
+    private File getOutputVideoFile() {
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -495,9 +364,9 @@ public class VideoActivity extends Activity {
         }
 
         // Create a media file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "VID_" + timeStamp + ".mp4");
+                    filePrefix + "_video_" + timeStamp + ".mp4");
         return mediaFile;
     }
 }
