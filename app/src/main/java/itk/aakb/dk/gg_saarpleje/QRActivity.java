@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class QRActivity extends Activity {
     private static final String TAG = "QRActivity";
-    private static final int   SCANS_PER_SEC = 3;
+    private static final int   SCANS_PER_SEC = 6;
 
     private Camera camera;
     private QRPreview qrPreview;
@@ -45,7 +45,7 @@ public class QRActivity extends Activity {
         public void onPreviewFrame(byte[] data, Camera camera) {
             Camera.Size size = camera.getParameters().getPreviewSize();
 
-            // Only scan every 10th frame
+            // Only scan SCANS_PER_SEC
             if( ++framesSinceLastScan % (30 / SCANS_PER_SEC) == 0 ) {
                 Log.i(TAG, "trigger");
                 scan(data, size.width, size.height);

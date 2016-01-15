@@ -194,7 +194,7 @@ public class CameraActivity extends Activity {
      * Create a File for saving an image
      */
     private File getOutputImageFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY + File.separator + filePrefix);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
 
         Log.i(TAG, mediaStorageDir.getAbsolutePath());
 

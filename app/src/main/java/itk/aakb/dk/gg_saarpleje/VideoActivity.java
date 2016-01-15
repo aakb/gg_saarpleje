@@ -353,7 +353,7 @@ public class VideoActivity extends Activity {
      * Create a File for saving a video
      */
     private File getOutputVideoFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), MainActivity.FILE_DIRECTORY + File.separator + filePrefix);
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {

@@ -85,6 +85,15 @@ public class MainActivity extends Activity {
             // Probably initialize members with default values for a new instance
             restoreState();
         }
+
+        Log.i(TAG, "------------");
+
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
+        Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
+
+        getDirectoryListing(f);
+
+        Log.i(TAG, "------------");
     }
 
     /**
@@ -292,7 +301,7 @@ public class MainActivity extends Activity {
      * Empty the directory.
      */
     private void cleanDirectory() {
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), FILE_DIRECTORY);
         Log.i(TAG, "Cleaning directory: " + f.getAbsolutePath());
 
         File[] files = f.listFiles();
@@ -310,17 +319,17 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * List all files in FILE_DIRECTORY.
+     * List all files in f.
+     *
+     * @param f file to list
      */
-    private void getDirectoryListing() {
-        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), FILE_DIRECTORY);
-        Log.i(TAG, "Listing files in: " + f.getAbsolutePath());
-
+    private void getDirectoryListing(File f) {
         File[] files = f.listFiles();
         if (files != null && files.length > 0) {
             for (File inFile : files) {
                 if (inFile.isDirectory()) {
-                    Log.i(TAG, inFile + "(dir)");
+                    Log.i(TAG, "(dir) " + inFile);
+                    getDirectoryListing(inFile);
                 } else {
                     Log.i(TAG, "" + inFile);
                 }
@@ -373,6 +382,7 @@ public class MainActivity extends Activity {
      * Update a ui text view.
      * @param id id of the text view
      * @param value value to assign
+     * @param color the color to set for the text field
      */
     private void updateTextField(int id, String value, Integer color) {
         TextView v = (TextView) findViewById(id);
