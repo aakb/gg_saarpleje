@@ -369,7 +369,10 @@ public class MainActivity extends Activity {
         else if (requestCode == SCAN_PATIENT_REQUEST && resultCode == RESULT_OK) {
             Log.i(TAG, "Received patient QR: " + data.getStringExtra("result"));
 
-            patient = data.getStringExtra("result");
+            patient = data.getStringExtra("result").replaceAll("[^a-zA-Z0-9.-]", "_");
+            patient = patient.substring(0, Math.min(patient.length(), 60));
+
+            Log.i(TAG, "Patient: " + patient);
 
             saveState();
             updateUI();
