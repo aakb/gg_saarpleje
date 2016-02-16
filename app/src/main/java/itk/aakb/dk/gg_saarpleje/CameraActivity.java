@@ -58,15 +58,15 @@ public class CameraActivity extends Activity {
         // Create an instance of Camera
         camera = getCameraInstance();
 
-        // Create our Preview view and set it as the content of our activity.
-        cameraPreview = new CameraPreview(this, camera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(cameraPreview);
-
         // Reset timer executions.
         timerExecutions = 0;
 
         countdownText.setText("3");
+
+        // Create our Preview view and set it as the content of our activity.
+        cameraPreview = new CameraPreview(this, camera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(cameraPreview);
 
         timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -165,8 +165,9 @@ public class CameraActivity extends Activity {
      */
     @Override
     protected void onPause() {
-        super.onPause();
         releaseCamera();
+
+        super.onPause();
     }
 
     /**
@@ -174,8 +175,9 @@ public class CameraActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         releaseCamera();
+
+        super.onDestroy();
     }
 
     /**

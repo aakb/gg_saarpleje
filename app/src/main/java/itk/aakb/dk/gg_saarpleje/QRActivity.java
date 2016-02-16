@@ -152,8 +152,9 @@ public class QRActivity extends Activity {
      */
     @Override
     protected void onPause() {
-        super.onPause();
         releaseCamera();
+
+        super.onPause();
     }
 
     /**
@@ -161,8 +162,9 @@ public class QRActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         releaseCamera();
+
+        super.onDestroy();
     }
 
     /**

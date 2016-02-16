@@ -77,12 +77,12 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onPause() {
-        super.onPause();
-
         timer.cancel();
         stopRecording();
 
         mSensorManager.unregisterListener(mSensorEventListener);
+
+        super.onPause();
     }
 
     /**
@@ -90,19 +90,20 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-
         timer.cancel();
         stopRecording();
 
         mSensorManager.unregisterListener(mSensorEventListener);
+
+        super.onDestroy();
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
         mLastAccelerometerSet = false;
         mLastMagnetometerSet = false;
+
+        super.onResume();
     }
 
     private void startRecording() {
@@ -180,7 +181,7 @@ public class MemoActivity extends Activity {
 
                 Log.i(TAG, "o: " + mOrientation[1]);
 
-                if (Math.abs(mOrientation[1]) < 0.15) {
+                if (Math.abs(mOrientation[1]) < 0.20) {
                     if (recording) {
                         Log.i(TAG, "Stop recording!");
 
