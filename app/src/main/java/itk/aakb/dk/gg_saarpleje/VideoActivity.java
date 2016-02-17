@@ -219,7 +219,8 @@ public class VideoActivity extends Activity {
 
                 Log.i(TAG, "o: " + mOrientation[1]);
 
-                if (Math.abs(mOrientation[1]) < 0.20) {
+                if (Math.abs(mOrientation[1]) < 0.20 && mOrientation[2] > 0) {
+                    Log.i(TAG, "0: " + mOrientation[0] + "   1: " + mOrientation[1] + "   2: " + mOrientation[2]);
                     if (recording && timerExecutions > 0) {
                         Log.i(TAG, "Stop recording!");
 

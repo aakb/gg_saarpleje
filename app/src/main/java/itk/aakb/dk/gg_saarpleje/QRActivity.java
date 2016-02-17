@@ -127,17 +127,13 @@ public class QRActivity extends Activity {
      * A safe way to get an instance of the Camera object.
      */
     public static Camera getCameraInstance() {
-        Camera c;
-
         Log.i(TAG, "getting camera instance...");
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            return Camera.open(); // attempt to get a Camera instance
         } catch (Exception e) {
             Log.e(TAG, "could not getCameraInstance");
             throw e;
         }
-
-        return c; // returns null if camera is unavailable
     }
 
     /**
