@@ -220,10 +220,10 @@ public class VideoActivity extends Activity {
                 Log.i(TAG, "o: " + mOrientation[1]);
 
                 if (Math.abs(mOrientation[1]) < 0.20) {
-                    if (recording) {
+                    if (recording && timerExecutions > 0) {
                         Log.i(TAG, "Stop recording!");
 
-                        timer.cancel();
+                        releaseTimer();
                         mSensorManager.unregisterListener(mSensorEventListener);
 
                         try {
