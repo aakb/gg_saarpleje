@@ -103,8 +103,6 @@ public class CameraActivity extends Activity {
         } catch (Exception e) {
             Log.e(TAG, "could not getCameraInstance");
             throw e;
-            // Camera is not available (in use or does not exist)
-            // @TODO: Throw Toast!
         }
     }
 
