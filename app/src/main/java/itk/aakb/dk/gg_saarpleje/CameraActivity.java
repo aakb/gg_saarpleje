@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,6 +59,11 @@ public class CameraActivity extends Activity {
         // Create an instance of Camera
         camera = getCameraInstance();
 
+        if (camera == null) {
+            Toast.makeText(this, "Camera cannot be locked", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+
         // Reset timer executions.
         timerExecutions = 0;
 
@@ -85,7 +91,7 @@ public class CameraActivity extends Activity {
 
                 if (timerExecutions >= 3) {
                     Log.i(TAG, "timer cancel, take picture");
-                    cancel();
+                    releaseTimer();
                     // Take picture
                     camera.takePicture(null, null, mPicture);
                 }

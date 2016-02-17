@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,6 +75,11 @@ public class VideoActivity extends Activity {
 
         Log.i(TAG, "get camera instance");
         camera = getCameraInstance();
+
+        if (camera == null) {
+            Toast.makeText(this, "Camera cannot be locked", Toast.LENGTH_SHORT).show();
+            finish();
+        }
 
         // Create our Preview view and set it as the content of our activity.
         cameraPreview = new CameraPreview(this, camera);
