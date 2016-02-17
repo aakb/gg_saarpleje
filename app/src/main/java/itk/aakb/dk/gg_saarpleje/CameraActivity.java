@@ -215,7 +215,7 @@ public class CameraActivity extends Activity {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                filePrefix + "_image_" + timeStamp + ".jpg");
+                filePrefix + "_" + timeStamp + ".jpg");
         return mediaFile;
     }
 }

@@ -223,8 +223,8 @@ public class VideoActivity extends Activity {
                     if (recording && timerExecutions > 0) {
                         Log.i(TAG, "Stop recording!");
 
+                        releaseSensor();
                         releaseTimer();
-                        mSensorManager.unregisterListener(mSensorEventListener);
 
                         try {
                             mediaRecorder.stop();  // stop the recording
@@ -237,14 +237,13 @@ public class VideoActivity extends Activity {
                             setResult(RESULT_OK, returnIntent);
 
                             recording = false;
-
-                            // Finish activity
-                            finish();
                         }
                         catch (Exception e) {
                             Log.d(TAG, "Exception stopping recording: " + e.getMessage());
                             releaseMediaRecorder();
                             releaseCamera();
+                        }
+                        finally {
                             finish();
                         }
                     }
@@ -291,13 +290,10 @@ public class VideoActivity extends Activity {
      */
     @Override
     protected void onPause() {
+        releaseSensor();
         releaseTimer();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
-
-        if (mSensorManager != null) {
-            mSensorManager.unregisterListener(mSensorEventListener);
-        }
 
         super.onPause();
     }
@@ -307,13 +303,10 @@ public class VideoActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
+        releaseSensor();
         releaseTimer();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
-
-        if (mSensorManager != null) {
-            mSensorManager.unregisterListener(mSensorEventListener);
-        }
 
         super.onDestroy();
     }
@@ -359,6 +352,12 @@ public class VideoActivity extends Activity {
         }
     }
 
+    private void releaseSensor() {
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
+        }
+    }
+
     /**
      * Create a File for saving a video
      */
@@ -376,7 +375,7 @@ public class VideoActivity extends Activity {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    filePrefix + "_video_" + timeStamp + ".mp4");
+                    filePrefix + "_" + timeStamp + ".mp4");
         return mediaFile;
     }
 }

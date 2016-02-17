@@ -77,10 +77,9 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onPause() {
+        releaseSensor();
         releaseTimer();
         stopRecording();
-
-        mSensorManager.unregisterListener(mSensorEventListener);
 
         super.onPause();
     }
@@ -90,10 +89,9 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
+        releaseSensor();
         releaseTimer();
         stopRecording();
-
-        mSensorManager.unregisterListener(mSensorEventListener);
 
         super.onDestroy();
     }
@@ -109,6 +107,12 @@ public class MemoActivity extends Activity {
     private void releaseTimer() {
         if (timer != null) {
             timer.cancel();
+        }
+    }
+
+    private void releaseSensor() {
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(mSensorEventListener);
         }
     }
 
@@ -191,8 +195,8 @@ public class MemoActivity extends Activity {
                     if (recording && timerExecutions > 0) {
                         Log.i(TAG, "Stop recording!");
 
+                        releaseSensor();
                         releaseTimer();
-                        mSensorManager.unregisterListener(mSensorEventListener);
 
                         try {
                             stopRecording();
@@ -203,12 +207,11 @@ public class MemoActivity extends Activity {
                             setResult(RESULT_OK, returnIntent);
 
                             recording = false;
-
-                            // Finish activity
-                            finish();
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e) {
                             Log.d(TAG, "Exception stopping recording: " + e.getMessage());
-                            stopRecording();
+                        }
+                        finally {
                             finish();
                         }
                     }
@@ -234,7 +237,7 @@ public class MemoActivity extends Activity {
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HHmmss").format(new Date());
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                filePrefix + "_audio_" + timeStamp + ".mp3");
+                filePrefix + "_" + timeStamp + ".mp3");
         return mediaFile;
     }
 }
