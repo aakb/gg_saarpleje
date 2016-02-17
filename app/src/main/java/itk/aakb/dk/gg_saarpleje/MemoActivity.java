@@ -189,7 +189,7 @@ public class MemoActivity extends Activity {
                 SensorManager.getRotationMatrix(mR, null, mLastAccelerometer, mLastMagnetometer);
                 SensorManager.getOrientation(mR, mOrientation);
 
-                if (Math.abs(mOrientation[1]) < 0.20 && mOrientation[2] > 0) {
+                if (Math.abs(mOrientation[1]) < 0.20 && mOrientation[2] > 1) {
                     Log.i(TAG, "0: " + mOrientation[0] + "   1: " + mOrientation[1] + "   2: " + mOrientation[2]);
                     if (recording && timerExecutions > 0) {
                         Log.i(TAG, "Stop recording!");
