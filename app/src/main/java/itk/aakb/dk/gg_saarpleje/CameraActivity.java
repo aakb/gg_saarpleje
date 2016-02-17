@@ -97,19 +97,15 @@ public class CameraActivity extends Activity {
      * A safe way to get an instance of the Camera object.
      */
     public static Camera getCameraInstance() {
-        Camera c = null;
-
         Log.i(TAG, "getting camera instance...");
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            return Camera.open(); // attempt to get a Camera instance
         } catch (Exception e) {
             Log.e(TAG, "could not getCameraInstance");
             throw e;
             // Camera is not available (in use or does not exist)
             // @TODO: Throw Toast!
         }
-
-        return c; // returns null if camera is unavailable
     }
 
     /**
@@ -165,6 +161,7 @@ public class CameraActivity extends Activity {
      */
     @Override
     protected void onPause() {
+        releaseTimer();
         releaseCamera();
 
         super.onPause();
@@ -175,6 +172,7 @@ public class CameraActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
+        releaseTimer();
         releaseCamera();
 
         super.onDestroy();
@@ -189,6 +187,12 @@ public class CameraActivity extends Activity {
             cameraPreview.release();
             camera.release();        // release the camera for other applications
             camera = null;
+        }
+    }
+
+    private void releaseTimer() {
+        if (timer != null) {
+            timer.cancel();
         }
     }
 

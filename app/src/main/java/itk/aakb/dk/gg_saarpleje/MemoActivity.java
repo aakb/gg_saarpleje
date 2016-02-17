@@ -77,7 +77,7 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onPause() {
-        timer.cancel();
+        releaseTimer();
         stopRecording();
 
         mSensorManager.unregisterListener(mSensorEventListener);
@@ -90,7 +90,7 @@ public class MemoActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
-        timer.cancel();
+        releaseTimer();
         stopRecording();
 
         mSensorManager.unregisterListener(mSensorEventListener);
@@ -104,6 +104,12 @@ public class MemoActivity extends Activity {
         mLastMagnetometerSet = false;
 
         super.onResume();
+    }
+
+    private void releaseTimer() {
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     private void startRecording() {

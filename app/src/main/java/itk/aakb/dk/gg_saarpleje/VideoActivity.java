@@ -33,6 +33,7 @@ public class VideoActivity extends Activity {
     private TextView durationText;
 
     private Timer timer;
+    private Timer initialTimer;
     private int timerExecutions = 0;
     private String filePrefix;
     private boolean recording = false;
@@ -134,7 +135,7 @@ public class VideoActivity extends Activity {
             outputPath = getOutputVideoFile().toString();
             mediaRecorder.setOutputFile(outputPath);
 
-            (new Timer()).schedule(new TimerTask() {
+            (initialTimer = new Timer()).schedule(new TimerTask() {
                 @Override
                 public void run() {
                     try {
@@ -146,8 +147,7 @@ public class VideoActivity extends Activity {
 
                         // Step 6: Prepare configured MediaRecorder
                         mediaRecorder.prepare();
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         Log.d(TAG, "IOException preparing MediaRecorder: " + e.getMessage());
                         releaseMediaRecorder();
                         releaseCamera();
@@ -291,15 +291,15 @@ public class VideoActivity extends Activity {
      */
     @Override
     protected void onPause() {
-        super.onPause();
-
-        timer.cancel();
+        releaseTimer();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(mSensorEventListener);
         }
+
+        super.onPause();
     }
 
     /**
@@ -307,22 +307,32 @@ public class VideoActivity extends Activity {
      */
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-
-        timer.cancel();
+        releaseTimer();
         releaseMediaRecorder();       // if you are using MediaRecorder, release it first
         releaseCamera();
 
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(mSensorEventListener);
         }
+
+        super.onDestroy();
     }
 
     @Override
     protected void onResume() {
-        super.onResume();
         mLastAccelerometerSet = false;
         mLastMagnetometerSet = false;
+
+        super.onResume();
+    }
+
+    private void releaseTimer() {
+        if (initialTimer != null) {
+            initialTimer.cancel();
+        }
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     /**
