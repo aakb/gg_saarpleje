@@ -223,7 +223,11 @@ public class MemoActivity extends Activity {
      * Create a File for saving a video
      */
     private File getOutputVideoFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
+
+        String timeStampFolderPrefix = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String folderPrefix = filePrefix + "_" + timeStampFolderPrefix;
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/" + MainActivity.FILE_DIRECTORY, folderPrefix);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {

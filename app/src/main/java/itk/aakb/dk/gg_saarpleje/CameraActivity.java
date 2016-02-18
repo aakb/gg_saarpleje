@@ -198,7 +198,11 @@ public class CameraActivity extends Activity {
      * Create a File for saving an image
      */
     private File getOutputImageFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), MainActivity.FILE_DIRECTORY);
+
+        String timeStampFolderPrefix = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String folderPrefix = filePrefix + "_" + timeStampFolderPrefix;
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/" + MainActivity.FILE_DIRECTORY, folderPrefix);
 
         Log.i(TAG, mediaStorageDir.getAbsolutePath());
 
