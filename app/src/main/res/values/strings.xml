@@ -14,7 +14,7 @@
     <string name="recording_memo">Recording memo</string>
     <string name="text_instruction">Look straight up to\nstop recording</string>
 
-    <string name="voice_command_start_program">Care program</string>
+    <string name="voice_command_start_program">Care app</string>
     <string name="start_memo">Dictate memo</string>
     <string name="finish">Save and close</string>
     <string name="take_image">Take image</string>
